@@ -41,3 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // If you are using an Elite C rev3 on the slave side, uncomment the lines below:
 #define SPLIT_USB_DETECT
 // #define NO_USB_STARTUP_CHECK
+
+// Sync layer_state to the slave half so its OLED can show the real layer
+// instead of always reading 0 (_QWERTY).
+#define SPLIT_LAYER_STATE_ENABLE
