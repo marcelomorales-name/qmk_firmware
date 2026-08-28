@@ -36,6 +36,21 @@ enum {
     TAP_SPC_ENT,
 };
 
+// Digitizer point keys: each taps the mouse cursor to a fixed absolute
+// position on screen, mirroring the numpad's spatial layout (7=top-left,
+// 5=center, 3=bottom-right, ...). Order must match digitizer_points[] below.
+enum custom_keycodes {
+    DIG_TL = SAFE_RANGE,
+    DIG_TC,
+    DIG_TR,
+    DIG_ML,
+    DIG_MC,
+    DIG_MR,
+    DIG_BL,
+    DIG_BC,
+    DIG_BR,
+};
+
 // Tap Dance definitions
 tap_dance_action_t tap_dance_actions[] = {
     // Tap once for Escape, twice for Caps Lock
@@ -70,11 +85,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                       KC_TRNS, KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_TRNS, KC_TRNS                                                     // thumbs
                       ),
 
-    // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE)
+    // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
+    // hosts a digitizer point grid at the numpad-analog positions.
     [_ADJUST] = LAYOUT(QK_BOOT, QK_RBT, KC_NO, KC_NO, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_KB_POWER, // number row
-                       KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,        // top row
-                       KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,               // home row
-                       KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, // bottom row
+                       KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_NO,     // top row
+                       KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_NO,           // home row
+                       KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO, // bottom row
                        KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO                                        // thumbs
                        ),
 
@@ -91,6 +107,36 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     return update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
+}
+
+// Absolute screen positions for the DIG_* keys, indexed by keycode - DIG_TL.
+// Order must match the custom_keycodes enum above.
+typedef struct {
+    float x;
+    float y;
+} digitizer_point_t;
+
+static const digitizer_point_t digitizer_points[9] PROGMEM = {
+    {0.0f, 0.0f}, {0.5f, 0.0f}, {1.0f, 0.0f}, // DIG_TL, DIG_TC, DIG_TR
+    {0.0f, 0.5f}, {0.5f, 0.5f}, {1.0f, 0.5f}, // DIG_ML, DIG_MC, DIG_MR
+    {0.0f, 1.0f}, {0.5f, 1.0f}, {1.0f, 1.0f}, // DIG_BL, DIG_BC, DIG_BR
+};
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (keycode >= DIG_TL && keycode <= DIG_BR) {
+        digitizer_point_t point;
+        memcpy_P(&point, &digitizer_points[keycode - DIG_TL], sizeof(point));
+        if (record->event.pressed) {
+            digitizer_in_range_on();
+            digitizer_set_position(point.x, point.y);
+            digitizer_tip_switch_on();
+        } else {
+            digitizer_tip_switch_off();
+            digitizer_in_range_off();
+        }
+        return false;
+    }
+    return true;
 }
 
 // SSD1306 OLED update loop, make sure to enable OLED_ENABLE=yes in rules.mk
