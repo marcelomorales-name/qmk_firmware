@@ -45,3 +45,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Sync layer_state to the slave half so its OLED can show the real layer
 // instead of always reading 0 (_QWERTY).
 #define SPLIT_LAYER_STATE_ENABLE
+
+// Turn the OLEDs off after a minute of inactivity, back on on next keypress.
+#define OLED_TIMEOUT 60000
