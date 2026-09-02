@@ -49,6 +49,7 @@ enum custom_keycodes {
     DIG_BL,
     DIG_BC,
     DIG_BR,
+    ALTGR_MC, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
 };
 
 // Tap Dance definitions
@@ -87,7 +88,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
     // hosts a digitizer point grid at the numpad-analog positions.
-    [_ADJUST] = LAYOUT(QK_BOOT, QK_RBT, KC_NO, KC_NO, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_KB_POWER, // number row
+    [_ADJUST] = LAYOUT(QK_BOOT, QK_RBT, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_KB_POWER, // number row
                        KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_NO,     // top row
                        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_NO,           // home row
                        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO, // bottom row
@@ -122,7 +123,244 @@ static const digitizer_point_t digitizer_points[9] PROGMEM = {
     {0.0f, 1.0f}, {0.5f, 1.0f}, {1.0f, 1.0f}, // DIG_BL, DIG_BC, DIG_BR
 };
 
+// --- Mac/PC AltGr switch -----------------------------------------------
+//
+// PC mode: KC_RALT behaves exactly as a normal AltGr modifier (today's
+// behavior, passed straight to the host). Mac mode: the physical AltGr
+// press is swallowed and the keyboard fakes the us(altgr-intl) XKB AltGr
+// layer itself by typing Unicode characters via QMK's UC_MAC Unicode-Hex
+// Input, since macOS has no equivalent host-side AltGr layer. The mapping
+// below (including the dead-key composition) is transcribed from the
+// upstream xkeyboard-config `symbols/us` "intl"/"altgr-intl" sections.
+
+enum dead_key {
+    DEAD_NONE = 0,
+    DEAD_GRAVE,
+    DEAD_ACUTE,
+    DEAD_TILDE,
+    DEAD_CIRCUMFLEX,
+    DEAD_DIAERESIS,
+    DEAD_CEDILLA,
+    DEAD_OGONEK,
+    DEAD_BREVE,
+    DEAD_ABOVERING,
+    DEAD_DOUBLEACUTE,
+    DEAD_MACRON,
+    DEAD_BELOWDOT,
+    DEAD_ABOVEDOT,
+    DEAD_CARON,
+    DEAD_HORN,
+    DEAD_HOOK,
+};
+
+#define ALTGR_DEAD_BIT 0x80000000UL
+#define ALTGR_DEAD(id) (ALTGR_DEAD_BIT | (uint32_t)(id))
+#define ALTGR_IS_DEAD(v) (((v) &ALTGR_DEAD_BIT) != 0)
+#define ALTGR_DEAD_ID(v) ((uint8_t)((v) & 0xFF))
+
+typedef struct {
+    uint16_t keycode;
+    uint32_t plain;   // AltGr level (xkb level 3)
+    uint32_t shifted; // AltGr+Shift level (xkb level 4)
+} altgr_entry_t;
+
+// Keys with no AltGr mapping in us(altgr-intl) (f, g, h, b, ...) are simply
+// absent here, so a lookup miss falls back to typing the plain key.
+static const altgr_entry_t altgr_map[] PROGMEM = {
+    {KC_GRV, ALTGR_DEAD(DEAD_GRAVE), ALTGR_DEAD(DEAD_TILDE)},
+    {KC_1, 0x00B9, 0x00A1},                              // ¹ ¡
+    {KC_2, 0x00B2, ALTGR_DEAD(DEAD_DOUBLEACUTE)},         // ²
+    {KC_3, 0x00B3, ALTGR_DEAD(DEAD_MACRON)},              // ³
+    {KC_4, 0x00A4, 0x00A3},                               // ¤ £
+    {KC_5, 0x20AC, ALTGR_DEAD(DEAD_CEDILLA)},             // €
+    {KC_6, ALTGR_DEAD(DEAD_CIRCUMFLEX), 0x00BC},          // ¼
+    {KC_7, ALTGR_DEAD(DEAD_HORN), 0x00BD},                // ½
+    {KC_8, ALTGR_DEAD(DEAD_OGONEK), 0x00BE},              // ¾
+    {KC_9, 0x2018, ALTGR_DEAD(DEAD_BREVE)},               // '
+    {KC_0, 0x2019, ALTGR_DEAD(DEAD_ABOVERING)},           // '
+    {KC_MINS, 0x00A5, ALTGR_DEAD(DEAD_BELOWDOT)},         // ¥
+    {KC_EQL, 0x00D7, 0x00F7},                             // × ÷
+
+    {KC_Q, 0x00E4, 0x00C4}, // ä Ä
+    {KC_W, 0x00E5, 0x00C5}, // å Å
+    {KC_E, 0x00E9, 0x00C9}, // é É
+    {KC_R, 0x00EB, 0x00CB}, // ë Ë
+    {KC_T, 0x00FE, 0x00DE}, // þ Þ
+    {KC_Y, 0x00FC, 0x00DC}, // ü Ü
+    {KC_U, 0x00FA, 0x00DA}, // ú Ú
+    {KC_I, 0x00ED, 0x00CD}, // í Í
+    {KC_O, 0x00F3, 0x00D3}, // ó Ó
+    {KC_P, 0x00F6, 0x00D6}, // ö Ö
+    {KC_LBRC, 0x00AB, 0x201C}, // « "
+    {KC_RBRC, 0x00BB, 0x201D}, // » "
+
+    {KC_A, 0x00E1, 0x00C1}, // á Á
+    {KC_S, 0x00DF, 0x00A7}, // ß §
+    {KC_D, 0x00F0, 0x00D0}, // ð Ð
+    {KC_J, 0x00EF, 0x00CF}, // ï Ï
+    {KC_K, 0x0153, 0x0152}, // œ Œ
+    {KC_L, 0x00F8, 0x00D8}, // ø Ø
+    {KC_SCLN, 0x00B6, 0x00B0}, // ¶ °
+    {KC_QUOT, ALTGR_DEAD(DEAD_ACUTE), ALTGR_DEAD(DEAD_DIAERESIS)},
+
+    {KC_Z, 0x00E6, 0x00C6}, // æ Æ
+    {KC_X, 0x0153, 0x0152}, // œ Œ (upstream duplicates K's mapping here)
+    {KC_C, 0x00A9, 0x00A2}, // © ¢
+    {KC_V, 0x00AE, 0x00AE}, // ®
+    {KC_N, 0x00F1, 0x00D1}, // ñ Ñ
+    {KC_M, 0x00B5, 0x00B5}, // µ
+    {KC_COMM, 0x00E7, 0x00C7}, // ç Ç
+    {KC_DOT, ALTGR_DEAD(DEAD_ABOVEDOT), ALTGR_DEAD(DEAD_CARON)},
+    {KC_SLSH, 0x00BF, ALTGR_DEAD(DEAD_HOOK)}, // ¿
+    {KC_BSLS, 0x00AC, 0x00A6},                // ¬ ¦
+};
+
+// Spacing glyph typed when a dead key isn't followed by a known combiner
+// (0 = no clean standalone glyph, so nothing extra is typed).
+static const uint16_t dead_spacing[DEAD_HOOK + 1] PROGMEM = {
+    [DEAD_GRAVE]       = 0x0060, // `
+    [DEAD_ACUTE]       = 0x00B4, // ´
+    [DEAD_TILDE]       = 0x007E, // ~
+    [DEAD_CIRCUMFLEX]  = 0x005E, // ^
+    [DEAD_DIAERESIS]   = 0x00A8, // ¨
+    [DEAD_CEDILLA]     = 0x00B8, // ¸
+    [DEAD_OGONEK]      = 0x02DB, // ˛
+    [DEAD_BREVE]       = 0x02D8, // ˘
+    [DEAD_ABOVERING]   = 0x02DA, // ˚
+    [DEAD_DOUBLEACUTE] = 0x02DD, // ˝
+    [DEAD_MACRON]      = 0x00AF, // ¯
+    [DEAD_ABOVEDOT]    = 0x02D9, // ˙
+    [DEAD_CARON]       = 0x02C7, // ˇ
+};
+
+typedef struct {
+    uint8_t  dead;
+    uint16_t keycode;
+    uint32_t codepoint; // lowercase/base form; see altgr_dead_case_adjust
+} dead_combo_t;
+
+static const dead_combo_t dead_combos[] PROGMEM = {
+    {DEAD_GRAVE, KC_A, 0x00E0}, {DEAD_GRAVE, KC_E, 0x00E8}, {DEAD_GRAVE, KC_I, 0x00EC}, {DEAD_GRAVE, KC_O, 0x00F2}, {DEAD_GRAVE, KC_U, 0x00F9},
+
+    {DEAD_ACUTE, KC_A, 0x00E1}, {DEAD_ACUTE, KC_E, 0x00E9}, {DEAD_ACUTE, KC_I, 0x00ED}, {DEAD_ACUTE, KC_O, 0x00F3}, {DEAD_ACUTE, KC_U, 0x00FA}, {DEAD_ACUTE, KC_Y, 0x00FD},
+
+    {DEAD_TILDE, KC_A, 0x00E3}, {DEAD_TILDE, KC_N, 0x00F1}, {DEAD_TILDE, KC_O, 0x00F5},
+
+    {DEAD_CIRCUMFLEX, KC_A, 0x00E2}, {DEAD_CIRCUMFLEX, KC_E, 0x00EA}, {DEAD_CIRCUMFLEX, KC_I, 0x00EE}, {DEAD_CIRCUMFLEX, KC_O, 0x00F4}, {DEAD_CIRCUMFLEX, KC_U, 0x00FB},
+
+    {DEAD_DIAERESIS, KC_A, 0x00E4}, {DEAD_DIAERESIS, KC_E, 0x00EB}, {DEAD_DIAERESIS, KC_I, 0x00EF}, {DEAD_DIAERESIS, KC_O, 0x00F6}, {DEAD_DIAERESIS, KC_U, 0x00FC},
+
+    {DEAD_CEDILLA, KC_C, 0x00E7},
+
+    {DEAD_CARON, KC_Z, 0x017E}, {DEAD_CARON, KC_C, 0x010D}, {DEAD_CARON, KC_S, 0x0161},
+
+    {DEAD_ABOVEDOT, KC_Z, 0x017C},
+
+    {DEAD_OGONEK, KC_A, 0x0105}, {DEAD_OGONEK, KC_E, 0x0119},
+
+    {DEAD_BREVE, KC_A, 0x0103},
+
+    {DEAD_DOUBLEACUTE, KC_O, 0x0151}, {DEAD_DOUBLEACUTE, KC_U, 0x0171},
+
+    {DEAD_MACRON, KC_A, 0x0101}, {DEAD_MACRON, KC_E, 0x0113}, {DEAD_MACRON, KC_I, 0x012B}, {DEAD_MACRON, KC_O, 0x014D}, {DEAD_MACRON, KC_U, 0x016B},
+
+    {DEAD_ABOVERING, KC_A, 0x00E5}, {DEAD_ABOVERING, KC_U, 0x016F},
+};
+
+// All dead_combos codepoints above are either Latin-1 Supplement accented
+// vowels (uppercase = lowercase - 0x20) or Latin Extended-A pairs in the
+// 0100-0177 block (uppercase = lowercase - 1). Both hold for every value
+// used here; this is not a general Unicode case-folding rule.
+static uint32_t altgr_dead_case_adjust(uint32_t cp, bool shift) {
+    if (!shift) return cp;
+    if (cp >= 0x00E0 && cp <= 0x00FE && cp != 0x00F7) return cp - 0x20;
+    if (cp >= 0x0100 && cp <= 0x0177) return cp - 1;
+    return cp;
+}
+
+static bool altgr_lookup(uint16_t keycode, bool shift, uint32_t *out) {
+    for (uint8_t i = 0; i < sizeof(altgr_map) / sizeof(altgr_map[0]); i++) {
+        altgr_entry_t e;
+        memcpy_P(&e, &altgr_map[i], sizeof(e));
+        if (e.keycode == keycode) {
+            *out = shift ? e.shifted : e.plain;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool dead_combo_lookup(uint8_t dead, uint16_t keycode, uint32_t *out) {
+    for (uint8_t i = 0; i < sizeof(dead_combos) / sizeof(dead_combos[0]); i++) {
+        dead_combo_t c;
+        memcpy_P(&c, &dead_combos[i], sizeof(c));
+        if (c.dead == dead && c.keycode == keycode) {
+            *out = c.codepoint;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool     mac_altgr_mode     = false; // false = PC (passthrough), true = Mac (Unicode-fake)
+static bool     ralt_held          = false;
+static uint8_t  pending_dead       = DEAD_NONE;
+static uint16_t altgr_swallowed_key = KC_NO;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (keycode == ALTGR_MC) {
+        if (record->event.pressed) {
+            mac_altgr_mode      = !mac_altgr_mode;
+            pending_dead        = DEAD_NONE;
+            ralt_held           = false;
+            altgr_swallowed_key = KC_NO;
+        }
+        return false;
+    }
+
+    if (keycode == KC_RALT) {
+        if (!mac_altgr_mode) {
+            return true;
+        }
+        ralt_held = record->event.pressed;
+        return false;
+    }
+
+    if (!record->event.pressed && keycode == altgr_swallowed_key) {
+        altgr_swallowed_key = KC_NO;
+        return false;
+    }
+
+    if (pending_dead != DEAD_NONE && record->event.pressed) {
+        uint8_t  dead = pending_dead;
+        pending_dead  = DEAD_NONE;
+        uint32_t composed;
+        if (dead_combo_lookup(dead, keycode, &composed)) {
+            register_unicode(altgr_dead_case_adjust(composed, (get_mods() & MOD_MASK_SHIFT) != 0));
+            altgr_swallowed_key = keycode;
+            return false;
+        }
+        uint16_t spacing = pgm_read_word(&dead_spacing[dead]);
+        if (spacing) {
+            register_unicode(spacing);
+        }
+        return true; // let this keystroke also type normally
+    }
+
+    if (mac_altgr_mode && ralt_held && record->event.pressed) {
+        uint32_t out;
+        if (altgr_lookup(keycode, (get_mods() & MOD_MASK_SHIFT) != 0, &out)) {
+            if (ALTGR_IS_DEAD(out)) {
+                pending_dead = ALTGR_DEAD_ID(out);
+            } else {
+                register_unicode(out);
+            }
+            altgr_swallowed_key = keycode;
+            return false;
+        }
+        return true;
+    }
+
     if (keycode >= DIG_TL && keycode <= DIG_BR) {
         digitizer_point_t point;
         memcpy_P(&point, &digitizer_points[keycode - DIG_TL], sizeof(point));
@@ -137,6 +375,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         return false;
     }
     return true;
+}
+
+void keyboard_post_init_user(void) {
+    set_unicode_input_mode(UNICODE_MODE_MACOS);
 }
 
 // SSD1306 OLED update loop, make sure to enable OLED_ENABLE=yes in rules.mk
@@ -210,6 +452,9 @@ bool oled_task_user(void) {
         if (is_caps_word_on()) {
             oled_fill_rect(4, 4, 10, 10);
         }
+        // AltGr mode indicator: PC (passthrough) vs Mac (Unicode-fake).
+        oled_set_cursor(0, 14);
+        oled_write_P(mac_altgr_mode ? PSTR("MAC") : PSTR("PC"), false);
     } else {
         // 128w x 32h logical canvas: wide, short digit, centered.
         draw_big_digit(layer, 52, 2, 24, 28, 5);
