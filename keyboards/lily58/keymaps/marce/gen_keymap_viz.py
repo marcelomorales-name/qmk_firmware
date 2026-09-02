@@ -89,6 +89,18 @@ def parse_keymaps(keymap_c: Path) -> "dict[str, list[str]]":
     return data
 
 
+def parse_layer_order(keymap_c: Path) -> "list[str]":
+    """Return layer names in enum declaration order (the real firmware layer
+    numbers), not the order they happen to appear in keymaps[] -- the two
+    deliberately differ here (see the _NUMERIC-must-stay-below comment)."""
+    text = keymap_c.read_text()
+    m = re.search(r"enum\s+layers\s*\{(.*?)\}", text, re.S)
+    if not m:
+        sys.exit(f"error: could not find 'enum layers {{ ... }}' in {keymap_c}")
+    names = [tok.strip() for tok in m.group(1).split(",")]
+    return [n for n in names if n]
+
+
 def parse_positions(keyboard_json: Path) -> "list[list[float]]":
     doc = json.loads(keyboard_json.read_text())
     try:
@@ -119,7 +131,15 @@ def build_layer_meta(layer_names: "list[str]") -> str:
 
 def render(keymap_c: Path, keyboard_json: Path, out_path: Path) -> None:
     layers = parse_keymaps(keymap_c)
+    order = parse_layer_order(keymap_c)
     positions = parse_positions(keyboard_json)
+
+    missing = [n for n in order if n not in layers]
+    if missing:
+        sys.exit(f"error: enum layers has {missing} but no matching [_LAYER] = LAYOUT(...) entry")
+    extra = [n for n in layers if n not in order]
+    if extra:
+        sys.exit(f"error: {extra} has a LAYOUT(...) entry but is missing from 'enum layers'")
 
     for name, toks in layers.items():
         if len(toks) != len(positions):
@@ -129,9 +149,10 @@ def render(keymap_c: Path, keyboard_json: Path, out_path: Path) -> None:
                 f"matches keyboard.json's layout[] order, or a layer is missing keys."
             )
 
+    layers = {name: layers[name] for name in order}
     layers_json = json.dumps(layers, indent=2)
     positions_json = json.dumps(positions)
-    layer_meta_js = build_layer_meta(list(layers.keys()))
+    layer_meta_js = build_layer_meta(order)
 
     html = TEMPLATE
     html = html.replace("__POSITIONS__", positions_json)
