@@ -36,9 +36,10 @@ enum {
     TAP_SPC_ENT,
 };
 
-// Digitizer point keys: each taps the mouse cursor to a fixed absolute
-// position on screen, mirroring the numpad's spatial layout (7=top-left,
-// 5=center, 3=bottom-right, ...). Order must match digitizer_points[] below.
+// Digitizer point keys: each moves the digitizer cursor to a fixed absolute
+// position on screen without clicking, mirroring the numpad's spatial layout
+// (7=top-left, 5=center, 3=bottom-right, ...). Order must match
+// digitizer_points[] below.
 enum custom_keycodes {
     DIG_TL = SAFE_RANGE,
     DIG_TC,
@@ -118,9 +119,9 @@ typedef struct {
 } digitizer_point_t;
 
 static const digitizer_point_t digitizer_points[9] PROGMEM = {
-    {0.0f, 0.0f}, {0.5f, 0.0f}, {1.0f, 0.0f}, // DIG_TL, DIG_TC, DIG_TR
-    {0.0f, 0.5f}, {0.5f, 0.5f}, {1.0f, 0.5f}, // DIG_ML, DIG_MC, DIG_MR
-    {0.0f, 1.0f}, {0.5f, 1.0f}, {1.0f, 1.0f}, // DIG_BL, DIG_BC, DIG_BR
+    {0.05f, 0.05f}, {0.5f, 0.05f}, {0.95f, 0.05f}, // DIG_TL, DIG_TC, DIG_TR
+    {0.05f, 0.5f}, {0.5f, 0.5f}, {0.95f, 0.5f},    // DIG_ML, DIG_MC, DIG_MR
+    {0.05f, 0.95f}, {0.5f, 0.95f}, {0.95f, 0.95f}, // DIG_BL, DIG_BC, DIG_BR
 };
 
 // --- Mac/PC AltGr switch -----------------------------------------------
@@ -367,9 +368,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if (record->event.pressed) {
             digitizer_in_range_on();
             digitizer_set_position(point.x, point.y);
-            digitizer_tip_switch_on();
         } else {
-            digitizer_tip_switch_off();
             digitizer_in_range_off();
         }
         return false;
