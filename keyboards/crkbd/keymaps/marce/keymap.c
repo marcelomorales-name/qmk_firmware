@@ -21,12 +21,12 @@
 // thumb keys per side instead of 4, but with 2 extra keys per side (the
 // "ex2" columns) stacked in the top/home rows directly above each side's
 // innermost thumb key. Deliberate changes made during the port:
-//   - The number row is gone; 1-0 live on _LOWER's top row instead.
-//   - The ex2 columns carry [ ] - = directly on the base layer (top row:
-//     [ ], home row: - =), recovering some of what a dedicated number row
-//     would have given without needing a layer shift.
-//   - QK_REPEAT_KEY / QK_ALT_REPEAT_KEY moved off the base layer (no room
-//     next to B/N anymore) onto _LOWER's bottom row.
+//   - The number row is gone; 1-0, [, ], -, and = all live on _LOWER
+//     instead (top row: numbers/-/=, home row: [/]).
+//   - The ex2 columns carry volume (top row) and repeat/alt repeat (home
+//     row, closest to the thumbs) directly on the base layer.
+//   - Backslash is gone from the base layer (freed up for Backspace on the
+//     top-row outer key); still reachable via _LOWER's home row.
 //   - Ctrl is no longer a dedicated thumb key (only 3 thumb keys/side, and
 //     Lower/Raise/Space/Enter/Alt/AltGr already claim all six). It's now a
 //     mod-tap on Z/Slash (hold = Ctrl, tap = the letter) so Ctrl+C/V/X etc.
@@ -84,10 +84,11 @@ tap_dance_action_t tap_dance_actions[] = {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY. The extra ex2 column (stacked above each side's
-    // innermost thumb key) carries [ ] - = directly, no LOWER needed.
+    // innermost thumb key) carries volume on the top row and repeat/alt
+    // repeat on the home row (closest to the thumbs), no LOWER needed.
     [_QWERTY] = LAYOUT_split_3x6_3_ex2(
-        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_LBRC,                            KC_RBRC, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                  // top row
-        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_MINS,                    KC_EQL, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),        // home row
+        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_VOLU,                            KC_VOLD, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                  // top row
+        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, QK_REPEAT_KEY,              QK_ALT_REPEAT_KEY, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT), // home row
         KC_LSFT, LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B,                            KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,           // bottom row
                               KC_LALT, LOWER, LGUI_T(KC_SPC),      TD(TAP_SPC_ENT), RAISE, KC_RALT                                                  // thumbs
         ),
