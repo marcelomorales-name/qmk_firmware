@@ -139,8 +139,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         ),
 };
 
+#ifdef RGB_MATRIX_ENABLE
+static void update_rgb_matrix(uint8_t layer);
+#endif
+
 layer_state_t layer_state_set_user(layer_state_t state) {
-    return update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
+    state = update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
+#ifdef RGB_MATRIX_ENABLE
+    update_rgb_matrix(get_highest_layer(state));
+#endif
+    return state;
 }
 
 // Absolute screen positions for the DIG_* keys, indexed by keycode - DIG_TL.
@@ -340,6 +348,20 @@ static bool     ralt_held          = false;
 static uint8_t  pending_dead       = DEAD_NONE;
 static uint16_t altgr_swallowed_key = KC_NO;
 
+#ifdef RGB_MATRIX_ENABLE
+// Cool blue while AltGr fakes macOS Unicode input, warm red while it's
+// passed straight through to a PC. Brightness climbs with how deep in the
+// layer stack we are, brightest on _ADJUST as a "you're in the danger
+// zone" cue (boot/reset live there). Layer order must match enum layers.
+static const uint8_t layer_val[5] PROGMEM = {10, 22, 34, 46, 50};
+
+static void update_rgb_matrix(uint8_t layer) {
+    uint8_t hue = mac_altgr_mode ? 170 : 0; // 170 = cool blue, 0 = red
+    uint8_t val = pgm_read_byte(&layer_val[layer < 5 ? layer : 0]);
+    rgb_matrix_sethsv_noeeprom(hue, 255, val);
+}
+#endif
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // macOS uses "natural" (inverted) scrolling direction vs. PC.
     if (mac_altgr_mode && (keycode == MS_WHLU || keycode == MS_WHLD)) {
@@ -358,6 +380,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             pending_dead        = DEAD_NONE;
             ralt_held           = false;
             altgr_swallowed_key = KC_NO;
+#ifdef RGB_MATRIX_ENABLE
+            update_rgb_matrix(get_highest_layer(layer_state));
+#endif
         }
         return false;
     }
@@ -421,6 +446,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 void keyboard_post_init_user(void) {
     set_unicode_input_mode(UNICODE_MODE_MACOS);
+#ifdef RGB_MATRIX_ENABLE
+    rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+    update_rgb_matrix(get_highest_layer(layer_state));
+#endif
 }
 
 // SSD1306 OLED update loop. Only relevant if this board actually has OLED
