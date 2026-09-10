@@ -99,7 +99,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // that means dropping its innermost (extra) column on each side.
     [_LOWER] = LAYOUT_split_3x6_3_ex2(
         KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_TRNS,                           KC_TRNS, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_BSLS,     // top row
-        KC_TRNS, KC_6, KC_7, KC_8, KC_9, KC_0, KC_TRNS,                          KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_QUOT,       // home row
+        KC_TRNS, KC_6, KC_7, KC_8, KC_9, KC_0, KC_TRNS,                          KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,       // home row
         KC_TRNS, CW_TOGG, TO(_NUMERIC), MS_BTN2, MS_BTN3, MS_BTN1,                MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS,              // bottom row
                               KC_TRNS, KC_TRNS, KC_SPC,            KC_ENT, KC_TRNS, KC_TRNS                                                         // thumbs
         ),
