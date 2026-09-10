@@ -1,0 +1,10 @@
+CAPS_WORD_ENABLE = yes
+DIGITIZER_ENABLE = yes
+ENCODER_ENABLE = yes
+EXTRAKEY_ENABLE = yes
+LTO_ENABLE = yes
+MOUSEKEY_ENABLE = yes
+OLED_ENABLE = no # flip to yes if this board actually has OLED modules installed
+REPEAT_KEY_ENABLE = yes
+TAP_DANCE_ENABLE = yes
+UNICODE_ENABLE = yes
