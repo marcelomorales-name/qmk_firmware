@@ -93,19 +93,25 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                               KC_LALT, LOWER, LGUI_T(KC_SPC),      TD(TAP_SPC_ENT), RAISE, KC_RALT                                                  // thumbs
         ),
 
-    // Lower layer: numbers, symbols, mouse keys (held via LOWER)
+    // Lower layer: numbers, symbols, mouse keys (held via LOWER). Top/home/
+    // bottom rows are exactly the Lily58 marce layout's Lower top/home/
+    // bottom rows -- for the bottom row, which is 7 keys/side on Lily58,
+    // that means dropping its innermost (extra) column on each side.
     [_LOWER] = LAYOUT_split_3x6_3_ex2(
-        KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_TRNS,                              KC_TRNS, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL,                // top row
-        KC_TRNS, KC_LBRC, KC_RBRC, KC_BSLS, KC_GRV, KC_NO, KC_TRNS,               KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_QUOT,       // home row
-        KC_TRNS, CW_TOGG, TO(_NUMERIC), QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, MS_BTN1, MS_BTN2, MS_BTN3, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLR,          // bottom row
+        KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_TRNS,                           KC_TRNS, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_BSLS,     // top row
+        KC_TRNS, KC_6, KC_7, KC_8, KC_9, KC_0, KC_TRNS,                          KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_QUOT,       // home row
+        KC_TRNS, CW_TOGG, TO(_NUMERIC), MS_BTN2, MS_BTN3, MS_BTN1,                MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS,              // bottom row
                               KC_TRNS, KC_TRNS, KC_SPC,            KC_ENT, KC_TRNS, KC_TRNS                                                         // thumbs
         ),
 
-    // Raise layer: function keys, navigation (held via RAISE)
+    // Raise layer: function keys, navigation (held via RAISE). Top/home/
+    // bottom rows are exactly the Lily58 marce layout's Raise top/home/
+    // bottom rows (Lily58's bottom-row innermost columns were both KC_NO,
+    // so dropping them to fit 6/side changes nothing).
     [_RAISE] = LAYOUT_split_3x6_3_ex2(
-        KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_TRNS,                        KC_TRNS, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12,            // top row
-        KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS,                      KC_TRNS, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_NO,        // home row
-        KC_TRNS, KC_F13, KC_F14, KC_F15, KC_PSCR, KC_PAUS,                        KC_HOME, KC_END, KC_PGUP, KC_PGDN, KC_DEL, KC_APP,               // bottom row
+        KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_TRNS,                      KC_TRNS, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_NO, KC_NO,          // top row
+        KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,                     KC_TRNS, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_NO,        // home row
+        KC_TRNS, KC_F11, KC_F12, KC_F13, KC_F14, KC_F15,                          KC_HOME, KC_END, KC_PGUP, KC_PGDN, KC_DEL, KC_TRNS,              // bottom row
                               KC_TRNS, KC_TRNS, KC_NO,             KC_NO, KC_TRNS, KC_TRNS                                                          // thumbs
         ),
 
