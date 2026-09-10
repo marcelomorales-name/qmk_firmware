@@ -444,7 +444,7 @@ const LAYERS = {
     "KC_NO",
     "KC_TRNS",
     "KC_TRNS",
-    "CW_TOGG",
+    "CW_CTL",
     "TO(_NUMERIC)",
     "MS_BTN2",
     "MS_BTN3",
@@ -492,7 +492,7 @@ const LAYERS = {
     "KC_INS",
     "KC_NO",
     "KC_TRNS",
-    "KC_F11",
+    "LCTL_T(KC_F11)",
     "KC_F12",
     "KC_F13",
     "KC_F14",
@@ -501,7 +501,7 @@ const LAYERS = {
     "KC_END",
     "KC_PGUP",
     "KC_PGDN",
-    "KC_DEL",
+    "LCTL_T(KC_DEL)",
     "KC_TRNS",
     "KC_TRNS",
     "KC_TRNS",
@@ -594,6 +594,7 @@ function labelFor(tok){
   if (tok === "QK_BOOT") return { main:"BOOT", sub:"", type:"danger" };
   if (tok === "QK_RBT") return { main:"RESET", sub:"", type:"danger" };
   if (tok === "CW_TOGG") return { main:"Caps", sub:"Word", type:"toggle" };
+  if (tok === "CW_CTL") return { main:"Caps", sub:"Ctrl", type:"dual" };
   if (tok === "QK_REPEAT_KEY") return { main:"↻", sub:"Repeat", type:"mod" };
   if (tok === "QK_ALT_REPEAT_KEY") return { main:"↻⌥", sub:"Alt Rep", type:"mod" };
 

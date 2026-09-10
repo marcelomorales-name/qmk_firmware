@@ -523,6 +523,7 @@ function labelFor(tok){
   if (tok === "QK_BOOT") return { main:"BOOT", sub:"", type:"danger" };
   if (tok === "QK_RBT") return { main:"RESET", sub:"", type:"danger" };
   if (tok === "CW_TOGG") return { main:"Caps", sub:"Word", type:"toggle" };
+  if (tok === "CW_CTL") return { main:"Caps", sub:"Ctrl", type:"dual" };
   if (tok === "QK_REPEAT_KEY") return { main:"↻", sub:"Repeat", type:"mod" };
   if (tok === "QK_ALT_REPEAT_KEY") return { main:"↻⌥", sub:"Alt Rep", type:"mod" };
 
