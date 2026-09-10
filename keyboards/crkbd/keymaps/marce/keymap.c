@@ -16,10 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Ported from keyboards/lily58/keymaps/marce. Corne (LAYOUT_split_3x6_3) has
-// 42 keys vs Lily58's 58 -- no number row, and only 3 thumb keys per side
-// instead of 4. Deliberate changes made during the port:
+// Ported from keyboards/lily58/keymaps/marce. This board uses
+// LAYOUT_split_3x6_3_ex2 (46 keys) vs Lily58's 58 -- no number row, only 3
+// thumb keys per side instead of 4, but with 2 extra keys per side (the
+// "ex2" columns) stacked in the top/home rows directly above each side's
+// innermost thumb key. Deliberate changes made during the port:
 //   - The number row is gone; 1-0 live on _LOWER's top row instead.
+//   - The ex2 columns carry [ ] - = directly on the base layer (top row:
+//     [ ], home row: - =), recovering some of what a dedicated number row
+//     would have given without needing a layer shift.
 //   - QK_REPEAT_KEY / QK_ALT_REPEAT_KEY moved off the base layer (no room
 //     next to B/N anymore) onto _LOWER's bottom row.
 //   - Ctrl is no longer a dedicated thumb key (only 3 thumb keys/side, and
@@ -78,47 +83,48 @@ tap_dance_action_t tap_dance_actions[] = {
 #define LOWER MO(_LOWER)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    // Base layer: QWERTY
-    [_QWERTY] = LAYOUT_split_3x6_3(
-        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T,                                     KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                  // top row
-        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G,                             KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),        // home row
-        KC_LSFT, LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B,                            KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,   // bottom row
-                              KC_LALT, LOWER, LGUI_T(KC_SPC),      TD(TAP_SPC_ENT), RAISE, KC_RALT                                          // thumbs
+    // Base layer: QWERTY. The extra ex2 column (stacked above each side's
+    // innermost thumb key) carries [ ] - = directly, no LOWER needed.
+    [_QWERTY] = LAYOUT_split_3x6_3_ex2(
+        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_LBRC,                            KC_RBRC, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                  // top row
+        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_MINS,                    KC_EQL, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),        // home row
+        KC_LSFT, LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B,                            KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,           // bottom row
+                              KC_LALT, LOWER, LGUI_T(KC_SPC),      TD(TAP_SPC_ENT), RAISE, KC_RALT                                                  // thumbs
         ),
 
     // Lower layer: numbers, symbols, mouse keys (held via LOWER)
-    [_LOWER] = LAYOUT_split_3x6_3(
-        KC_1, KC_2, KC_3, KC_4, KC_5, KC_6,                                       KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL,                 // top row
-        KC_TRNS, KC_LBRC, KC_RBRC, KC_BSLS, KC_GRV, KC_NO,                        MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_QUOT,        // home row
-        KC_TRNS, CW_TOGG, TO(_NUMERIC), QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, MS_BTN1, MS_BTN2, MS_BTN3, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLR,   // bottom row
-                              KC_TRNS, KC_TRNS, KC_SPC,            KC_ENT, KC_TRNS, KC_TRNS                                                 // thumbs
+    [_LOWER] = LAYOUT_split_3x6_3_ex2(
+        KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_TRNS,                              KC_TRNS, KC_7, KC_8, KC_9, KC_0, KC_MINS, KC_EQL,                // top row
+        KC_TRNS, KC_LBRC, KC_RBRC, KC_BSLS, KC_GRV, KC_NO, KC_TRNS,               KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_QUOT,       // home row
+        KC_TRNS, CW_TOGG, TO(_NUMERIC), QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, MS_BTN1, MS_BTN2, MS_BTN3, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLR,          // bottom row
+                              KC_TRNS, KC_TRNS, KC_SPC,            KC_ENT, KC_TRNS, KC_TRNS                                                         // thumbs
         ),
 
     // Raise layer: function keys, navigation (held via RAISE)
-    [_RAISE] = LAYOUT_split_3x6_3(
-        KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6,                                 KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12,             // top row
-        KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,                               KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_NO,          // home row
-        KC_TRNS, KC_F13, KC_F14, KC_F15, KC_PSCR, KC_PAUS,                        KC_HOME, KC_END, KC_PGUP, KC_PGDN, KC_DEL, KC_APP,        // bottom row
-                              KC_TRNS, KC_TRNS, KC_NO,             KC_NO, KC_TRNS, KC_TRNS                                                  // thumbs
+    [_RAISE] = LAYOUT_split_3x6_3_ex2(
+        KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_TRNS,                        KC_TRNS, KC_F7, KC_F8, KC_F9, KC_F10, KC_F11, KC_F12,            // top row
+        KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS,                      KC_TRNS, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_NO,        // home row
+        KC_TRNS, KC_F13, KC_F14, KC_F15, KC_PSCR, KC_PAUS,                        KC_HOME, KC_END, KC_PGUP, KC_PGDN, KC_DEL, KC_APP,               // bottom row
+                              KC_TRNS, KC_TRNS, KC_NO,             KC_NO, KC_TRNS, KC_TRNS                                                          // thumbs
         ),
 
     // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
     // hosts the digitizer point grid, one physical row per grid row.
-    [_ADJUST] = LAYOUT_split_3x6_3(
-        QK_BOOT, QK_RBT, ALTGR_MC, TO(_NUMERIC), KC_NO, KC_NO,                    DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_KB_POWER,       // top row
-        KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO,                          DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_NO,             // home row
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,                                 DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO,             // bottom row
-                              KC_NO, KC_TRNS, KC_NO,               KC_NO, KC_TRNS, KC_NO                                                    // thumbs
+    [_ADJUST] = LAYOUT_split_3x6_3_ex2(
+        QK_BOOT, QK_RBT, ALTGR_MC, TO(_NUMERIC), KC_NO, KC_NO, KC_TRNS,           KC_TRNS, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_KB_POWER,      // top row
+        KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, KC_TRNS,                 KC_TRNS, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_NO,            // home row
+        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,                                 DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO,                     // bottom row
+                              KC_NO, KC_TRNS, KC_NO,               KC_NO, KC_TRNS, KC_NO                                                            // thumbs
         ),
 
     // Numeric layer: numpad on the right hand, arrows on the left,
     // entered/exited via TO(_NUMERIC)/TO(0). LOWER/RAISE stay held-only
     // escapes back to those layers, returning to _NUMERIC on release.
-    [_NUMERIC] = LAYOUT_split_3x6_3(
-        TO(0), KC_UP, KC_NO, KC_NO, KC_NO, KC_PSLS,                               KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_BSPC,            // top row
-        KC_LEFT, KC_DOWN, KC_RGHT, KC_NO, KC_NO, KC_PAST,                         KC_P4, KC_P5, KC_P6, KC_PCMM, KC_NO, KC_NO,              // home row
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_PMNS,                               KC_P1, KC_P2, KC_P3, KC_PEQL, KC_NO, KC_NO,              // bottom row
-                              LOWER, KC_SPC, KC_P0,                KC_PDOT, KC_ENT, RAISE                                                   // thumbs
+    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(
+        TO(0), KC_UP, KC_NO, KC_NO, KC_NO, KC_PSLS, KC_NO,                        KC_NO, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_BSPC,             // top row
+        KC_LEFT, KC_DOWN, KC_RGHT, KC_NO, KC_NO, KC_PAST, KC_NO,                  KC_NO, KC_P4, KC_P5, KC_P6, KC_PCMM, KC_NO, KC_NO,               // home row
+        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_PMNS,                               KC_P1, KC_P2, KC_P3, KC_PEQL, KC_NO, KC_NO,                      // bottom row
+                              LOWER, KC_SPC, KC_P0,                KC_PDOT, KC_ENT, RAISE                                                           // thumbs
         ),
 };
 

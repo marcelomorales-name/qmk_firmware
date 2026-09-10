@@ -2,7 +2,7 @@
 """Regenerate keymap-viz.html from keymap.c + the board's info.json.
 
 Run this after editing keymap.c (new keys, new layers, etc). It re-parses
-the LAYOUT_split_3x6_3(...) argument lists and the physical key positions,
+the LAYOUT_split_3x6_3_ex2(...) argument lists and the physical key positions,
 then rewrites keymap-viz.html next to this script. The label/color logic for
 individual keycodes lives in the HTML template below (LABEL_RULES section
 of the embedded <script>) -- extend KC/MOUSE/MEDIA/NUMPAD/NAV/labelFor()
@@ -22,8 +22,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_KEYMAP_C = HERE / "keymap.c"
-DEFAULT_KEYBOARD_JSON = HERE.parent.parent / "info.json"
-DEFAULT_LAYOUT_NAME = "LAYOUT_split_3x6_3"
+DEFAULT_KEYBOARD_JSON = HERE.parent.parent / "rev4_1" / "info.json"
+DEFAULT_LAYOUT_NAME = "LAYOUT_split_3x6_3_ex2"
 DEFAULT_OUT = HERE / "keymap-viz.html"
 
 LAYER_TITLES = {
@@ -46,18 +46,18 @@ def parse_keymaps(keymap_c: Path) -> "dict[str, list[str]]":
         sys.exit(f"error: could not find the keymaps[] array in {keymap_c}")
     body = m.group(1)
 
-    # Find each "[_LAYER] = LAYOUT_split_3x6_3(" header, then walk forward
+    # Find each "[_LAYER] = LAYOUT_split_3x6_3_ex2(" header, then walk forward
     # tracking paren depth to find its matching close -- robust to whatever
     # trails the closing paren (trailing comma, comment, whitespace, ...).
     data = {}
-    for header in re.finditer(r"\[(_\w+)\]\s*=\s*LAYOUT_split_3x6_3\(", body):
+    for header in re.finditer(r"\[(_\w+)\]\s*=\s*LAYOUT_split_3x6_3_ex2\(", body):
         name = header.group(1)
         start = header.end()
         depth = 1
         i = start
         while depth > 0:
             if i >= len(body):
-                sys.exit(f"error: unbalanced parens in LAYOUT_split_3x6_3(...) for layer {name}")
+                sys.exit(f"error: unbalanced parens in LAYOUT_split_3x6_3_ex2(...) for layer {name}")
             if body[i] == "(":
                 depth += 1
             elif body[i] == ")":
@@ -86,7 +86,7 @@ def parse_keymaps(keymap_c: Path) -> "dict[str, list[str]]":
         data[name] = toks
 
     if not data:
-        sys.exit(f"error: could not find any [_LAYER] = LAYOUT_split_3x6_3(...) entries in {keymap_c}")
+        sys.exit(f"error: could not find any [_LAYER] = LAYOUT_split_3x6_3_ex2(...) entries in {keymap_c}")
     return data
 
 
@@ -137,17 +137,17 @@ def render(keymap_c: Path, keyboard_json: Path, layout_name: str, out_path: Path
 
     missing = [n for n in order if n not in layers]
     if missing:
-        sys.exit(f"error: enum layers has {missing} but no matching [_LAYER] = LAYOUT_split_3x6_3(...) entry")
+        sys.exit(f"error: enum layers has {missing} but no matching [_LAYER] = LAYOUT_split_3x6_3_ex2(...) entry")
     extra = [n for n in layers if n not in order]
     if extra:
-        sys.exit(f"error: {extra} has a LAYOUT_split_3x6_3(...) entry but is missing from 'enum layers'")
+        sys.exit(f"error: {extra} has a LAYOUT_split_3x6_3_ex2(...) entry but is missing from 'enum layers'")
 
     for name, toks in layers.items():
         if len(toks) != len(positions):
             sys.exit(
                 f"error: layer {name} has {len(toks)} keys but {keyboard_json}'s "
                 f"{layout_name} defines {len(positions)} physical positions -- the "
-                f"LAYOUT_split_3x6_3(...) arg order no longer matches info.json's layout[] "
+                f"LAYOUT_split_3x6_3_ex2(...) arg order no longer matches info.json's layout[] "
                 f"order, or a layer is missing keys."
             )
 
@@ -485,7 +485,7 @@ TEMPLATE = r"""<title>Corne V4 Marce Layout</title>
     </div>
   </div>
 
-  <footer>generated from keymap.c &middot; positions from crkbd/info.json (LAYOUT_split_3x6_3) &middot; regenerate with gen_keymap_viz.py</footer>
+  <footer>generated from keymap.c &middot; positions from crkbd/info.json (LAYOUT_split_3x6_3_ex2) &middot; regenerate with gen_keymap_viz.py</footer>
 </div>
 
 <script>
