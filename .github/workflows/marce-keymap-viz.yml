@@ -32,15 +32,15 @@ jobs:
           mkdir -p _site/lily58 _site/corne
           cp keyboards/lily58/keymaps/marce/keymap-viz.html _site/lily58/index.html
           cp keyboards/crkbd/keymaps/marce/keymap-viz.html _site/corne/index.html
-          cat > _site/index.html <<'HTML'
-          <!doctype html>
-          <meta charset="utf-8">
-          <title>marce keymaps</title>
-          <ul>
-            <li><a href="lily58/">Lily58L marce keymap</a></li>
-            <li><a href="corne/">Corne v4 marce keymap</a></li>
-          </ul>
-          HTML
+          printf '%s\n' \
+            '<!doctype html>' \
+            '<meta charset="utf-8">' \
+            '<title>marce keymaps</title>' \
+            '<ul>' \
+            '  <li><a href="lily58/">Lily58L marce keymap</a></li>' \
+            '  <li><a href="corne/">Corne v4 marce keymap</a></li>' \
+            '</ul>' \
+            > _site/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
