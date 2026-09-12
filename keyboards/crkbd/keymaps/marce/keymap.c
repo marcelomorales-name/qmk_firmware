@@ -127,18 +127,23 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                               KC_NO, KC_TRNS, KC_NO,               KC_NO, KC_TRNS, KC_NO                                                            // thumbs
         ),
 
-    // Numeric layer: numpad on the right hand, arrows on the left (shifted
-    // one column right of the numpad operator column), entered/exited via
-    // TO(_NUMERIC)/TO(0). LOWER/RAISE sit in the same thumb slots as every
-    // other layer; Space/Enter moved to the remaining inner thumb keys, and
-    // Shift/Ctrl/Alt fill the otherwise-unused left bottom row. LOWER/RAISE
-    // stay held-only escapes back to those layers, returning to _NUMERIC on
-    // release. The outer thumb keys fall through to base layer's Alt/AltGr.
+    // Numeric layer: numpad on the right hand, arrows on the left, entered/
+    // exited via TO(_NUMERIC)/TO(0) (TO(0) sits directly below TAB in the
+    // top-left corner). The numpad's operator column (/,*,-) and its
+    // rightmost digit column (9,6,3) both moved one column left onto the
+    // left hand, right next to the arrow column. LOWER/RAISE sit in the
+    // same thumb slots as every other layer; Space/Enter moved to the
+    // remaining inner thumb keys, and Shift/Ctrl/Alt fill the otherwise-
+    // unused left bottom row (mirrored by RCTL/RSFT flanking KC_PDOT on the
+    // right). LOWER/RAISE stay held-only escapes back to those layers,
+    // returning to _NUMERIC on release. The left outer thumb key falls
+    // through to base layer's Alt; the right one is KC_P0 instead (below
+    // KC_PDOT, which sits in the same spot as KC_DOT on the base layer).
     [_NUMERIC] = LAYOUT_split_3x6_3_ex2(
-        TO(0), KC_NO, KC_UP, KC_NO, KC_NO, KC_PSLS, KC_NO,                        KC_NO, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_BSPC,             // top row
-        KC_NO, KC_LEFT, KC_DOWN, KC_RGHT, KC_NO, KC_PAST, KC_NO,                  KC_NO, KC_P4, KC_P5, KC_P6, KC_PCMM, KC_NO, KC_NO,               // home row
-        KC_LSFT, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PMNS,                         KC_P1, KC_P2, KC_P3, KC_PEQL, KC_P0, KC_PDOT,                    // bottom row
-                              KC_TRNS, LOWER, KC_SPC,               KC_ENT, RAISE, KC_TRNS                                                          // thumbs
+        KC_TAB, KC_NO, KC_UP, KC_NO, KC_PSLS, KC_P9, KC_NO,                       KC_NO, KC_P7, KC_P8, KC_NO, KC_PPLS, KC_NO, KC_BSPC,             // top row
+        TO(0), KC_LEFT, KC_DOWN, KC_RGHT, KC_PAST, KC_P6, KC_NO,                  KC_NO, KC_P4, KC_P5, KC_NO, KC_PCMM, KC_NO, KC_NO,               // home row
+        KC_LSFT, KC_LCTL, KC_LALT, KC_NO, KC_PMNS, KC_P3,                         KC_P1, KC_P2, KC_RCTL, KC_PDOT, KC_RSFT, KC_PEQL,                // bottom row
+                              KC_TRNS, LOWER, KC_SPC,               KC_ENT, RAISE, KC_P0                                                            // thumbs
         ),
 };
 
