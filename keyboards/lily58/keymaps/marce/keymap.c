@@ -67,42 +67,42 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_QWERTY] = LAYOUT(KC_GRV, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_BSPC,                                            // number row
                        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                                            // top row
                        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),                         // home row
-                       KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_RSFT, // bottom row
-                       KC_LCTL, KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT, KC_RCTL                                       // thumbs
+                       KC_LSFT, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_N, KC_M, KC_COMM, RALT_T(KC_DOT), RCTL_T(KC_SLSH), KC_RSFT, // bottom row
+                       KC_LCTL, KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT, RCTL_T(KC_RGUI)                               // thumbs
                        ),
 
     // Lower layer: numbers, symbols, mouse keys (held via LOWER)
-    [_LOWER] = LAYOUT(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_DEL,                                   // number row
-                      KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_BSLS,                                // top row
-                      KC_TRNS, KC_6, KC_7, KC_8, KC_9, KC_0, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_QUOT,                                  // home row
-                      KC_TRNS, CW_TOGG, TO(_NUMERIC), MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS, // bottom row
+    [_LOWER] = LAYOUT(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,                                  // number row
+                      KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_TRNS,                            // top row
+                      KC_TRNS, CW_TOGG, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,                     // home row
+                      KC_TRNS, LCTL_T(KC_NO), LALT_T(KC_NO), MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLD, MS_WHLU, RALT_T(MS_WHLR), RCTL_T(KC_NO), KC_TRNS, // bottom row
                       KC_TRNS, KC_TRNS, KC_TRNS, KC_SPC, KC_ENT, KC_TRNS, KC_TRNS, KC_TRNS                                                      // thumbs
                       ),
 
     // Raise layer: function keys, navigation (held via RAISE)
-    [_RAISE] = LAYOUT(KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,                                 // number row
-                      KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_NO, KC_NO,                             // top row
-                      KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_NO,                          // home row
-                      KC_TRNS, KC_F11, KC_F12, KC_F13, KC_F14, KC_F15, KC_NO, KC_NO, KC_HOME, KC_END, KC_PGUP, KC_PGDN, KC_DEL, KC_TRNS,     // bottom row
+    [_RAISE] = LAYOUT(KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS,                               // number row
+                      KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_INS, KC_TRNS,                          // top row
+                      KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_DEL, KC_TRNS,                        // home row
+                      KC_TRNS, LCTL_T(KC_F11), LALT_T(KC_F12), KC_F13, KC_F14, KC_F15, KC_NO, KC_NO, KC_HOME, KC_PGDN, KC_PGUP, RALT_T(KC_END), RCTL_T(KC_NO), KC_TRNS, // bottom row
                       KC_TRNS, KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_TRNS, KC_TRNS                                                     // thumbs
                       ),
 
     // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
     // hosts a digitizer point grid at the numpad-analog positions.
-    [_ADJUST] = LAYOUT(QK_BOOT, QK_RBT, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_KB_POWER, // number row
-                       KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_NO,     // top row
-                       KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_NO,           // home row
-                       KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO, // bottom row
+    [_ADJUST] = LAYOUT(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, // number row
+                       KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
+                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_TRNS,       // home row
+                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_TRNS, // bottom row
                        KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO                                        // thumbs
                        ),
 
     // Numeric layer: numpad on the right hand, WASD-as-arrows on the left,
     // entered/exited via TO(_NUMERIC)/TO(0). LOWER/RAISE stay held-only
     // escapes back to those layers, returning to _NUMERIC on release.
-    [_NUMERIC] = LAYOUT(TO(0), KC_1, KC_2, KC_3, KC_4, KC_5, KC_NUM, KC_PSLS, KC_PAST, KC_PMNS, KC_NO, KC_BSPC,           // number row
-                        KC_TAB, KC_Q, KC_UP, KC_E, KC_R, KC_T, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_NO,                // top row
-                        KC_ESC, KC_LEFT, KC_DOWN, KC_RIGHT, KC_F, KC_G, KC_P4, KC_P5, KC_P6, KC_PCMM, KC_NO, KC_NO,       // home row
-                        KC_LSFT, KC_Z, KC_X, KC_C, KC_V, KC_B, TO(0), KC_NO, KC_P1, KC_P2, KC_P3, KC_PEQL, KC_NO, KC_NO,  // bottom row
+    [_NUMERIC] = LAYOUT(KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_NUM, KC_PSLS, KC_PAST, KC_PMNS, KC_NO, KC_TRNS,         // number row
+                        KC_TRNS, KC_Q, KC_UP, KC_E, KC_R, KC_T, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_TRNS,            // top row
+                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, KC_F, KC_G, KC_P4, KC_P5, KC_P6, KC_PCMM, KC_NO, KC_TRNS,    // home row
+                        KC_TRNS, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, TO(0), KC_NO, KC_P1, KC_P2, KC_P3, RALT_T(KC_PEQL), RCTL_T(KC_NO), KC_TRNS, // bottom row
                         KC_LCTL, KC_LALT, LOWER, KC_SPC, KC_ENT, RAISE, KC_P0, KC_PDOT                                    // thumbs
                         ),
 };
@@ -309,6 +309,17 @@ static uint8_t  pending_dead       = DEAD_NONE;
 static uint16_t altgr_swallowed_key = KC_NO;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // macOS uses "natural" (inverted) scrolling direction vs. PC.
+    if (mac_altgr_mode && (keycode == MS_WHLU || keycode == MS_WHLD)) {
+        uint16_t inverted = (keycode == MS_WHLU) ? MS_WHLD : MS_WHLU;
+        if (record->event.pressed) {
+            register_code(inverted);
+        } else {
+            unregister_code(inverted);
+        }
+        return false;
+    }
+
     if (keycode == ALTGR_MC) {
         if (record->event.pressed) {
             mac_altgr_mode      = !mac_altgr_mode;
