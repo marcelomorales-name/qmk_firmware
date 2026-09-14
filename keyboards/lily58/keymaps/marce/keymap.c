@@ -34,6 +34,7 @@ enum layers {
 // Tap Dance declarations
 enum {
     TAP_SPC_ENT,
+    TAP_NUMERIC, // tap: one-shot _NUMERIC (next key only); hold: momentary _NUMERIC
 };
 
 // Digitizer point keys: each moves the digitizer cursor to a fixed absolute
@@ -53,10 +54,32 @@ enum custom_keycodes {
     ALTGR_MC, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
 };
 
+// Tap _NUMERIC: one-shot for the next keypress only. Hold _NUMERIC: momentary,
+// same as MO() while the key is down. layer_held tracks which behavior fired
+// so dance_reset only calls layer_off() when the hold-path actually ran.
+static bool numeric_layer_held = false;
+
+void td_numeric_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->pressed) {
+        layer_on(_NUMERIC);
+        numeric_layer_held = true;
+    } else {
+        set_oneshot_layer(_NUMERIC, ONESHOT_START);
+    }
+}
+
+void td_numeric_reset(tap_dance_state_t *state, void *user_data) {
+    if (numeric_layer_held) {
+        layer_off(_NUMERIC);
+        numeric_layer_held = false;
+    }
+}
+
 // Tap Dance definitions
 tap_dance_action_t tap_dance_actions[] = {
     // Tap once for Escape, twice for Caps Lock
     [TAP_SPC_ENT] = ACTION_TAP_DANCE_DOUBLE(KC_SPC, KC_ENT),
+    [TAP_NUMERIC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_numeric_finished, td_numeric_reset),
 };
 
 #define RAISE MO(_RAISE)
@@ -67,14 +90,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_QWERTY] = LAYOUT(KC_GRV, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_BSPC,                                            // number row
                        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                                            // top row
                        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),                         // home row
-                       KC_LSFT, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_N, KC_M, KC_COMM, RALT_T(KC_DOT), RCTL_T(KC_SLSH), KC_RSFT, // bottom row
+                       KC_LSFT, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, TD(TAP_NUMERIC), QK_REPEAT_KEY, KC_N, KC_M, KC_COMM, RALT_T(KC_DOT), RCTL_T(KC_SLSH), KC_RSFT, // bottom row
                        KC_LCTL, KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT, RCTL_T(KC_RGUI)                               // thumbs
                        ),
 
     // Lower layer: numbers, symbols, mouse keys (held via LOWER)
     [_LOWER] = LAYOUT(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,                                  // number row
                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_TRNS,                            // top row
-                      KC_TRNS, CW_TOGG, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,                     // home row
+                      KC_TRNS, CW_TOGG, TG(_NUMERIC), KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,                     // home row
                       KC_TRNS, LCTL_T(KC_NO), LALT_T(KC_NO), MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLD, MS_WHLU, RALT_T(MS_WHLR), RCTL_T(KC_NO), KC_TRNS, // bottom row
                       KC_TRNS, KC_TRNS, KC_TRNS, KC_SPC, KC_ENT, KC_TRNS, KC_TRNS, KC_TRNS                                                      // thumbs
                       ),
@@ -83,27 +106,31 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_RAISE] = LAYOUT(KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS,                               // number row
                       KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_INS, KC_TRNS,                          // top row
                       KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_DEL, KC_TRNS,                        // home row
-                      KC_TRNS, LCTL_T(KC_F11), LALT_T(KC_F12), KC_F13, KC_F14, KC_F15, KC_NO, KC_NO, KC_HOME, KC_PGDN, KC_PGUP, RALT_T(KC_END), RCTL_T(KC_NO), KC_TRNS, // bottom row
+                      KC_TRNS, LCTL_T(KC_F11), LALT_T(KC_F12), KC_F13, KC_F14, KC_F15, QK_ALT_REPEAT_KEY, KC_NO, KC_HOME, KC_PGDN, KC_PGUP, RALT_T(KC_END), RCTL_T(KC_NO), KC_TRNS, // bottom row
                       KC_TRNS, KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_TRNS, KC_TRNS                                                     // thumbs
                       ),
 
     // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
     // hosts a digitizer point grid at the numpad-analog positions.
-    [_ADJUST] = LAYOUT(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, // number row
+    [_ADJUST] = LAYOUT(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, // number row
                        KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
                        KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_TRNS,       // home row
                        KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_TRNS, // bottom row
                        KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO                                        // thumbs
                        ),
 
-    // Numeric layer: numpad on the right hand, WASD-as-arrows on the left,
-    // entered/exited via TO(_NUMERIC)/TO(0). LOWER/RAISE stay held-only
-    // escapes back to those layers, returning to _NUMERIC on release.
-    [_NUMERIC] = LAYOUT(KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_NUM, KC_PSLS, KC_PAST, KC_PMNS, KC_NO, KC_TRNS,         // number row
-                        KC_TRNS, KC_Q, KC_UP, KC_E, KC_R, KC_T, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_TRNS,            // top row
-                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, KC_F, KC_G, KC_P4, KC_P5, KC_P6, KC_PCMM, KC_NO, KC_TRNS,    // home row
-                        KC_TRNS, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, TO(0), KC_NO, KC_P1, KC_P2, KC_P3, RALT_T(KC_PEQL), RCTL_T(KC_NO), KC_TRNS, // bottom row
-                        KC_LCTL, KC_LALT, LOWER, KC_SPC, KC_ENT, RAISE, KC_P0, KC_PDOT                                    // thumbs
+    // Numeric layer: number-row digits/symbols (not numpad keycodes, so they
+    // aren't affected by the host's Num Lock state) arranged in a numpad-style
+    // grid on the right hand, WASD-as-arrows on the left.
+    // Entered/exited by tapping TAP_NUMERIC (one-shot) or holding it (MO),
+    // or via TG(_NUMERIC) on _LOWER for a persistent toggle that this same
+    // key also switches back off. LOWER/RAISE stay held-only escapes back
+    // to those layers, returning to _NUMERIC on release.
+    [_NUMERIC] = LAYOUT(KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_NUM, KC_SLSH, LSFT(KC_8), KC_MINS, KC_NO, KC_TRNS,      // number row
+                        KC_TRNS, KC_Q, KC_UP, KC_E, KC_R, KC_T, KC_7, KC_8, KC_9, LSFT(KC_EQL), KC_NO, KC_TRNS,          // top row
+                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, KC_F, KC_G, KC_4, KC_5, KC_6, KC_COMM, KC_NO, KC_TRNS,       // home row
+                        KC_TRNS, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, KC_TRNS, KC_NO, KC_1, KC_2, KC_3, RALT_T(KC_EQL), RCTL_T(KC_NO), KC_TRNS, // bottom row
+                        KC_LCTL, KC_LALT, LOWER, KC_SPC, KC_ENT, RAISE, KC_0, KC_DOT                                      // thumbs
                         ),
 };
 

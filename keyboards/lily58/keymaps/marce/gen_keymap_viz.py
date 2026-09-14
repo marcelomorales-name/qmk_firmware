@@ -30,7 +30,7 @@ LAYER_TITLES = {
     "_LOWER": ("Lower", "var(--hue-lower)", "Numbers, symbols, mouse keys — held via the left thumb key."),
     "_RAISE": ("Raise", "var(--hue-raise)", "Function keys, navigation, arrows — held via the right thumb key."),
     "_ADJUST": ("Adjust", "var(--hue-adjust)", "Lower + Raise held together. Media transport, boot/reset, layer jump to Numeric."),
-    "_NUMERIC": ("Numeric", "var(--hue-numeric)", "Standalone numpad layer, entered/exited with TO() — excluded from the tri-layer stack."),
+    "_NUMERIC": ("Numeric", "var(--hue-numeric)", "Standalone numpad layer — tap the Numeric key for one shot, hold it for momentary, or toggle it on/off from Lower. Excluded from the tri-layer stack."),
 }
 
 
@@ -382,8 +382,8 @@ TEMPLATE = r"""<title>Lily58L Marce Layout</title>
   .key.t-trans .main{color:var(--ink-faint); font-size:.85rem;}
   .key.t-mod{background:var(--key-alt);}
   .key.t-mod .main{color:var(--ink-dim); font-size:.68rem; letter-spacing:.02em;}
-  .key.t-dual{background:linear-gradient(160deg, var(--key) 55%, color-mix(in srgb, var(--accent) 24%, var(--key)) 55%);}
-  .key.t-dual .sub{color:var(--accent);}
+  .key.t-dual{background:linear-gradient(160deg, var(--key) 55%, color-mix(in srgb, var(--layer-hue, var(--accent)) 24%, var(--key)) 55%);}
+  .key.t-dual .sub{color:var(--layer-hue, var(--accent));}
   .key.t-layer{background:color-mix(in srgb, var(--layer-hue) 26%, var(--key));border-color:color-mix(in srgb, var(--layer-hue) 55%, var(--line));}
   .key.t-layer .main{color:var(--layer-hue); font-size:.68rem; font-weight:600; letter-spacing:.02em;}
   .key.t-danger{background:color-mix(in srgb, var(--danger) 30%, var(--key)); border-color:color-mix(in srgb, var(--danger) 60%, var(--line));}
@@ -474,7 +474,11 @@ TEMPLATE = r"""<title>Lily58L Marce Layout</title>
     </div>
     <div class="note">
       <h3>Numeric is standalone</h3>
-      <p><code>Numeric</code> is entered and left with <code>TO()</code>, not held. <code>layer_state_set_user</code> excludes it from the tri&#8209;layer check so it never gets clobbered by Lower+Raise.</p>
+      <p><code>Numeric</code> isn't held via <code>MO()</code> alone &mdash; <code>layer_state_set_user</code> excludes it from the tri&#8209;layer check so it never gets clobbered by Lower+Raise.</p>
+    </div>
+    <div class="note">
+      <h3>Three ways into Numeric</h3>
+      <p>The tap&#8209;dance <code>Numeric</code> key on the base layer: tap for a one&#8209;shot (next key only), hold for momentary. <code>Lower</code>'s <code>Numeric</code> key is a toggle &mdash; press once to switch in, again to switch back.</p>
     </div>
     <div class="note">
       <h3>Dual&#8209;role thumb keys</h3>
@@ -504,14 +508,32 @@ function labelFor(tok){
   if (m = tok.match(/^LGUI_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Gui", type:"dual" };
   if (m = tok.match(/^LCTL_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Ctrl", type:"dual" };
   if (m = tok.match(/^LSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
+  if (m = tok.match(/^RALT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Alt", type:"dual" };
+  if (m = tok.match(/^RGUI_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Gui", type:"dual" };
+  if (m = tok.match(/^RCTL_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Ctrl", type:"dual" };
+  if (m = tok.match(/^RSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
+  if (m = tok.match(/^LSFT\((.+)\)$/)) return { main: SHIFTED[m[1]] || ("⇧" + kc(m[1])), sub:"", type:"alpha" };
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
+  if (tok === "TD(TAP_NUMERIC)") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
   if (tok === "LOWER") return { main:"Lower", sub:"", type:"layer", hue:"var(--hue-lower)" };
   if (tok === "RAISE") return { main:"Raise", sub:"", type:"layer", hue:"var(--hue-raise)" };
-  if (tok === "TO(4)") return { main:"Numeric", sub:"→", type:"layer", hue:"var(--hue-numeric)" };
-  if (tok === "TO(0)") return { main:"Base", sub:"→", type:"layer", hue:"var(--hue-lower)" };
+  if (m = tok.match(/^TG\((\w+)\)$/)) {
+    const target = m[1];
+    const label = target === "_NUMERIC" ? "Numeric" : target.replace(/^_/,"").toLowerCase().replace(/^./,c=>c.toUpperCase());
+    const hue = target === "_NUMERIC" ? "var(--hue-numeric)" : undefined;
+    return { main: label, sub:"⇄ toggle", type:"layer", hue };
+  }
+  if (m = tok.match(/^TO\((\w+)\)$/)) {
+    const target = m[1];
+    if (target === "0" || target === "_QWERTY") return { main:"Base", sub:"⇥ jump", type:"layer", hue:"var(--hue-lower)" };
+    if (target === "4" || target === "_NUMERIC") return { main:"Numeric", sub:"⇥ jump", type:"layer", hue:"var(--hue-numeric)" };
+    return { main: target.replace(/^_/,"").toLowerCase().replace(/^./,c=>c.toUpperCase()), sub:"⇥ jump", type:"layer" };
+  }
   if (tok === "QK_BOOT") return { main:"BOOT", sub:"", type:"danger" };
   if (tok === "QK_RBT") return { main:"RESET", sub:"", type:"danger" };
   if (tok === "CW_TOGG") return { main:"Caps", sub:"Word", type:"toggle" };
+  if (tok === "QK_REPEAT_KEY") return { main:"↻", sub:"Repeat", type:"mod" };
+  if (tok === "QK_ALT_REPEAT_KEY") return { main:"↻⌥", sub:"Alt Rep", type:"mod" };
 
   if (tok.startsWith("MS_")) return { main: MOUSE[tok] || tok, sub:"", type:"mouse" };
   if (["KC_MPLY","KC_MPRV","KC_MNXT","KC_MRWD","KC_MFFD","KC_MSTP","KC_VOLU","KC_VOLD"].includes(tok))
@@ -530,7 +552,7 @@ function labelFor(tok){
 const MOUSE = {
   MS_LEFT:"M ←", MS_RGHT:"M →", MS_UP:"M ↑", MS_DOWN:"M ↓",
   MS_BTN1:"Click", MS_BTN2:"Right", MS_BTN3:"Mid",
-  MS_WHLU:"Wheel↑", MS_WHLD:"Wheel↓",
+  MS_WHLU:"Wheel↑", MS_WHLD:"Wheel↓", MS_WHLL:"Wheel←", MS_WHLR:"Wheel→",
   MS_ACL0:"Spd 0", MS_ACL1:"Spd 1", MS_ACL2:"Spd 2"
 };
 const MEDIA = {
@@ -559,6 +581,7 @@ const KC = {
   KC_SPC:"Space", KC_ENT:"⏎ Enter"
 };
 function kc(tok){ return KC[tok] || tok.replace("KC_",""); }
+const SHIFTED = { KC_8:"*", KC_EQL:"+" };
 
 let active = Object.keys(LAYER_META)[0];
 try { active = localStorage.getItem("lily58-active-layer") || active; } catch(e) {}

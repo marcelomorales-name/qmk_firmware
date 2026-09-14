@@ -209,8 +209,8 @@
   .key.t-trans .main{color:var(--ink-faint); font-size:.85rem;}
   .key.t-mod{background:var(--key-alt);}
   .key.t-mod .main{color:var(--ink-dim); font-size:.68rem; letter-spacing:.02em;}
-  .key.t-dual{background:linear-gradient(160deg, var(--key) 55%, color-mix(in srgb, var(--accent) 24%, var(--key)) 55%);}
-  .key.t-dual .sub{color:var(--accent);}
+  .key.t-dual{background:linear-gradient(160deg, var(--key) 55%, color-mix(in srgb, var(--layer-hue, var(--accent)) 24%, var(--key)) 55%);}
+  .key.t-dual .sub{color:var(--layer-hue, var(--accent));}
   .key.t-layer{background:color-mix(in srgb, var(--layer-hue) 26%, var(--key));border-color:color-mix(in srgb, var(--layer-hue) 55%, var(--line));}
   .key.t-layer .main{color:var(--layer-hue); font-size:.68rem; font-weight:600; letter-spacing:.02em;}
   .key.t-danger{background:color-mix(in srgb, var(--danger) 30%, var(--key)); border-color:color-mix(in srgb, var(--danger) 60%, var(--line));}
@@ -301,7 +301,11 @@
     </div>
     <div class="note">
       <h3>Numeric is standalone</h3>
-      <p><code>Numeric</code> is entered and left with <code>TO()</code>, not held. <code>layer_state_set_user</code> excludes it from the tri&#8209;layer check so it never gets clobbered by Lower+Raise.</p>
+      <p><code>Numeric</code> isn't held via <code>MO()</code> alone &mdash; <code>layer_state_set_user</code> excludes it from the tri&#8209;layer check so it never gets clobbered by Lower+Raise.</p>
+    </div>
+    <div class="note">
+      <h3>Three ways into Numeric</h3>
+      <p>The tap&#8209;dance <code>Numeric</code> key on the base layer: tap for a one&#8209;shot (next key only), hold for momentary. <code>Lower</code>'s <code>Numeric</code> key is a toggle &mdash; press once to switch in, again to switch back.</p>
     </div>
     <div class="note">
       <h3>Dual&#8209;role thumb keys</h3>
@@ -356,18 +360,18 @@ const LAYERS = {
     "KC_SCLN",
     "RGUI_T(KC_QUOT)",
     "KC_LSFT",
-    "KC_Z",
-    "KC_X",
+    "LCTL_T(KC_Z)",
+    "LALT_T(KC_X)",
     "KC_C",
     "KC_V",
     "KC_B",
+    "TD(TAP_NUMERIC)",
     "QK_REPEAT_KEY",
-    "QK_ALT_REPEAT_KEY",
     "KC_N",
     "KC_M",
     "KC_COMM",
-    "KC_DOT",
-    "KC_SLSH",
+    "RALT_T(KC_DOT)",
+    "RCTL_T(KC_SLSH)",
     "KC_RSFT",
     "KC_LCTL",
     "KC_LALT",
@@ -376,67 +380,67 @@ const LAYERS = {
     "TD(TAP_SPC_ENT)",
     "RAISE",
     "KC_RALT",
-    "KC_RCTL"
+    "RCTL_T(KC_RGUI)"
   ],
   "_NUMERIC": [
-    "TO(0)",
+    "KC_TRNS",
     "KC_1",
     "KC_2",
     "KC_3",
     "KC_4",
     "KC_5",
     "KC_NUM",
-    "KC_PSLS",
-    "KC_PAST",
-    "KC_PMNS",
+    "KC_SLSH",
+    "LSFT(KC_8)",
+    "KC_MINS",
     "KC_NO",
-    "KC_BSPC",
-    "KC_TAB",
+    "KC_TRNS",
+    "KC_TRNS",
     "KC_Q",
     "KC_UP",
     "KC_E",
     "KC_R",
     "KC_T",
-    "KC_P7",
-    "KC_P8",
-    "KC_P9",
-    "KC_PPLS",
+    "KC_7",
+    "KC_8",
+    "KC_9",
+    "LSFT(KC_EQL)",
     "KC_NO",
-    "KC_NO",
-    "KC_ESC",
+    "KC_TRNS",
+    "KC_TRNS",
     "KC_LEFT",
     "KC_DOWN",
     "KC_RGHT",
     "KC_F",
     "KC_G",
-    "KC_P4",
-    "KC_P5",
-    "KC_P6",
-    "KC_PCMM",
+    "KC_4",
+    "KC_5",
+    "KC_6",
+    "KC_COMM",
     "KC_NO",
-    "KC_NO",
-    "KC_LSFT",
-    "KC_Z",
-    "KC_X",
+    "KC_TRNS",
+    "KC_TRNS",
+    "LCTL_T(KC_Z)",
+    "LALT_T(KC_X)",
     "KC_C",
     "KC_V",
     "KC_B",
-    "TO(0)",
+    "KC_TRNS",
     "KC_NO",
-    "KC_P1",
-    "KC_P2",
-    "KC_P3",
-    "KC_PEQL",
-    "KC_NO",
-    "KC_NO",
+    "KC_1",
+    "KC_2",
+    "KC_3",
+    "RALT_T(KC_EQL)",
+    "RCTL_T(KC_NO)",
+    "KC_TRNS",
     "KC_LCTL",
     "KC_LALT",
     "LOWER",
     "KC_SPC",
     "KC_ENT",
     "RAISE",
-    "KC_P0",
-    "KC_PDOT"
+    "KC_0",
+    "KC_DOT"
   ],
   "_LOWER": [
     "KC_TRNS",
@@ -450,25 +454,25 @@ const LAYERS = {
     "KC_F8",
     "KC_F9",
     "KC_F10",
-    "KC_DEL",
     "KC_TRNS",
-    "KC_1",
-    "KC_2",
-    "KC_3",
-    "KC_4",
-    "KC_5",
+    "KC_TRNS",
+    "KC_NO",
+    "KC_NO",
+    "KC_NO",
+    "KC_NO",
+    "KC_NO",
     "KC_MINS",
     "KC_EQL",
     "KC_GRV",
     "KC_LBRC",
     "KC_RBRC",
-    "KC_BSLS",
     "KC_TRNS",
-    "KC_6",
-    "KC_7",
-    "KC_8",
-    "KC_9",
-    "KC_0",
+    "KC_TRNS",
+    "CW_TOGG",
+    "TG(_NUMERIC)",
+    "KC_NO",
+    "KC_NO",
+    "KC_NO",
     "MS_LEFT",
     "MS_DOWN",
     "MS_UP",
@@ -476,8 +480,8 @@ const LAYERS = {
     "KC_NO",
     "KC_TRNS",
     "KC_TRNS",
-    "CW_TOGG",
-    "TO(_NUMERIC)",
+    "LCTL_T(KC_NO)",
+    "LALT_T(KC_NO)",
     "MS_BTN2",
     "MS_BTN3",
     "MS_BTN1",
@@ -486,8 +490,8 @@ const LAYERS = {
     "MS_WHLL",
     "MS_WHLD",
     "MS_WHLU",
-    "MS_WHLR",
-    "KC_NO",
+    "RALT_T(MS_WHLR)",
+    "RCTL_T(KC_NO)",
     "KC_TRNS",
     "KC_TRNS",
     "KC_TRNS",
@@ -510,7 +514,7 @@ const LAYERS = {
     "KC_NO",
     "KC_NO",
     "KC_NO",
-    "KC_NO",
+    "KC_TRNS",
     "KC_TRNS",
     "KC_F1",
     "KC_F2",
@@ -521,8 +525,8 @@ const LAYERS = {
     "KC_PAUS",
     "KC_APP",
     "KC_NO",
-    "KC_NO",
-    "KC_NO",
+    "KC_INS",
+    "KC_TRNS",
     "KC_TRNS",
     "KC_F6",
     "KC_F7",
@@ -533,21 +537,21 @@ const LAYERS = {
     "KC_DOWN",
     "KC_UP",
     "KC_RGHT",
-    "KC_INS",
-    "KC_NO",
+    "KC_DEL",
     "KC_TRNS",
-    "KC_F11",
-    "KC_F12",
+    "KC_TRNS",
+    "LCTL_T(KC_F11)",
+    "LALT_T(KC_F12)",
     "KC_F13",
     "KC_F14",
     "KC_F15",
-    "KC_NO",
+    "QK_ALT_REPEAT_KEY",
     "KC_NO",
     "KC_HOME",
-    "KC_END",
-    "KC_PGUP",
     "KC_PGDN",
-    "KC_DEL",
+    "KC_PGUP",
+    "RALT_T(KC_END)",
+    "RCTL_T(KC_NO)",
     "KC_TRNS",
     "KC_TRNS",
     "KC_TRNS",
@@ -559,19 +563,19 @@ const LAYERS = {
     "KC_TRNS"
   ],
   "_ADJUST": [
-    "QK_BOOT",
-    "QK_RBT",
+    "KC_TRNS",
+    "KC_NO",
     "ALTGR_MC",
     "KC_NO",
-    "TO(_NUMERIC)",
     "KC_NO",
     "KC_NO",
     "KC_NO",
     "KC_NO",
     "KC_NO",
     "KC_NO",
-    "KC_KB_POWER",
     "KC_NO",
+    "KC_TRNS",
+    "KC_TRNS",
     "KC_PAUS",
     "KC_SCRL",
     "KC_NUM",
@@ -582,8 +586,8 @@ const LAYERS = {
     "DIG_TR",
     "KC_NO",
     "KC_NO",
-    "KC_NO",
-    "KC_NO",
+    "KC_TRNS",
+    "KC_TRNS",
     "KC_NO",
     "KC_NO",
     "KC_NO",
@@ -594,8 +598,8 @@ const LAYERS = {
     "DIG_MR",
     "KC_NO",
     "KC_NO",
-    "KC_NO",
-    "KC_NO",
+    "KC_TRNS",
+    "KC_TRNS",
     "KC_NO",
     "KC_NO",
     "KC_NO",
@@ -608,7 +612,7 @@ const LAYERS = {
     "DIG_BR",
     "KC_NO",
     "KC_NO",
-    "KC_NO",
+    "KC_TRNS",
     "KC_NO",
     "KC_NO",
     "KC_TRNS",
@@ -622,7 +626,7 @@ const LAYERS = {
 
 const LAYER_META = {
   _QWERTY: { label:"Qwerty", n:0, hue:null, desc:"Base layer. Held modifiers double as layer taps in the thumb cluster." },
-  _NUMERIC: { label:"Numeric", n:1, hue:"var(--hue-numeric)", desc:"Standalone numpad layer, entered/exited with TO() \u2014 excluded from the tri-layer stack." },
+  _NUMERIC: { label:"Numeric", n:1, hue:"var(--hue-numeric)", desc:"Standalone numpad layer \u2014 tap the Numeric key for one shot, hold it for momentary, or toggle it on/off from Lower. Excluded from the tri-layer stack." },
   _LOWER: { label:"Lower", n:2, hue:"var(--hue-lower)", desc:"Numbers, symbols, mouse keys \u2014 held via the left thumb key." },
   _RAISE: { label:"Raise", n:3, hue:"var(--hue-raise)", desc:"Function keys, navigation, arrows \u2014 held via the right thumb key." },
   _ADJUST: { label:"Adjust", n:4, hue:"var(--hue-adjust)", desc:"Lower + Raise held together. Media transport, boot/reset, layer jump to Numeric." }
@@ -642,9 +646,17 @@ function labelFor(tok){
   if (m = tok.match(/^RGUI_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Gui", type:"dual" };
   if (m = tok.match(/^RCTL_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Ctrl", type:"dual" };
   if (m = tok.match(/^RSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
+  if (m = tok.match(/^LSFT\((.+)\)$/)) return { main: SHIFTED[m[1]] || ("⇧" + kc(m[1])), sub:"", type:"alpha" };
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
+  if (tok === "TD(TAP_NUMERIC)") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
   if (tok === "LOWER") return { main:"Lower", sub:"", type:"layer", hue:"var(--hue-lower)" };
   if (tok === "RAISE") return { main:"Raise", sub:"", type:"layer", hue:"var(--hue-raise)" };
+  if (m = tok.match(/^TG\((\w+)\)$/)) {
+    const target = m[1];
+    const label = target === "_NUMERIC" ? "Numeric" : target.replace(/^_/,"").toLowerCase().replace(/^./,c=>c.toUpperCase());
+    const hue = target === "_NUMERIC" ? "var(--hue-numeric)" : undefined;
+    return { main: label, sub:"⇄ toggle", type:"layer", hue };
+  }
   if (m = tok.match(/^TO\((\w+)\)$/)) {
     const target = m[1];
     if (target === "0" || target === "_QWERTY") return { main:"Base", sub:"⇥ jump", type:"layer", hue:"var(--hue-lower)" };
@@ -703,6 +715,7 @@ const KC = {
   KC_SPC:"Space", KC_ENT:"⏎ Enter"
 };
 function kc(tok){ return KC[tok] || tok.replace("KC_",""); }
+const SHIFTED = { KC_8:"*", KC_EQL:"+" };
 
 let active = Object.keys(LAYER_META)[0];
 try { active = localStorage.getItem("lily58-active-layer") || active; } catch(e) {}
