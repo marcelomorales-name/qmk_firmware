@@ -98,7 +98,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_LOWER] = LAYOUT(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,                                  // number row
                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_TRNS,                            // top row
                       KC_TRNS, CW_TOGG, TG(_NUMERIC), KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,                     // home row
-                      KC_TRNS, LCTL_T(KC_NO), LALT_T(KC_NO), MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLD, MS_WHLU, RALT_T(MS_WHLR), RCTL_T(KC_NO), KC_TRNS, // bottom row
+                      KC_TRNS, LCTL_T(KC_NO), LALT_T(KC_NO), MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, RCTL_T(KC_NO), KC_TRNS, // bottom row
                       KC_TRNS, KC_TRNS, KC_TRNS, KC_SPC, KC_ENT, KC_TRNS, KC_TRNS, KC_TRNS                                                      // thumbs
                       ),
 
