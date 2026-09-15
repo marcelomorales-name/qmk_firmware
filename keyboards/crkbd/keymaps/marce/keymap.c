@@ -23,8 +23,10 @@
 // innermost thumb key. Deliberate changes made during the port:
 //   - The number row is gone; 1-0, [, ], -, and = all live on _LOWER
 //     instead (top row: numbers/-/=, home row: [/]).
-//   - The ex2 columns carry volume (top row) and repeat/alt repeat (home
-//     row, closest to the thumbs) directly on the base layer.
+//   - The ex2 columns carry _NUMERIC-layer access (top row, via the custom
+//     NUM_MO/NUM_OS keycodes -- see their declaration for details) and
+//     repeat/alt repeat (home row, closest to the thumbs) directly on the
+//     base layer.
 //   - Backslash is gone from the base layer (freed up for Backspace on the
 //     top-row outer key); still reachable via _LOWER's home row.
 //   - Ctrl is no longer a dedicated thumb key (only 3 thumb keys/side, and
@@ -74,6 +76,15 @@ enum custom_keycodes {
     CW_CTL,   // tap: toggle Caps Word. hold: Ctrl. CW_TOGG isn't a basic
               // keycode so it can't use the built-in xxxx_T() mod-tap macros;
               // handled by hand in process_record_user/matrix_scan_user below.
+    NUM_MO,   // hold: momentary _NUMERIC (like a plain MO(_NUMERIC)).
+              // Chords with NUM_OS -- see NUM_OS below.
+    NUM_OS,   // tap: one-shot _NUMERIC for the next keystroke, then back to
+              // whatever was active before. Pressed together with NUM_MO,
+              // the two instead lock _NUMERIC on until it's exited the
+              // normal way (_NUMERIC's own TO(0) key). Custom-rolled
+              // instead of QK_ONE_SHOT_LAYER/QK_MOMENTARY because neither
+              // built-in leaves room for detecting the other being held at
+              // the same time.
 };
 
 // Tap Dance definitions
@@ -87,64 +98,74 @@ tap_dance_action_t tap_dance_actions[] = {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY. The extra ex2 column (stacked above each side's
-    // innermost thumb key) carries volume on the top row and repeat/alt
-    // repeat on the home row (closest to the thumbs), no LOWER needed.
-    [_QWERTY] = LAYOUT_split_3x6_3_ex2(
-        KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_VOLU,                            KC_VOLD, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                  // top row
-        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, QK_REPEAT_KEY,              QK_ALT_REPEAT_KEY, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT), // home row
-        LSFT_T(KC_GRV), LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B,                     KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,           // bottom row
-                              KC_LALT, LOWER, LGUI_T(KC_SPC),      TD(TAP_SPC_ENT), RAISE, KC_RALT                                                  // thumbs
-        ),
+    // innermost thumb key) carries _NUMERIC access (top row -- see NUM_MO/
+    // NUM_OS above) and repeat/alt repeat (home row, closest to the
+    // thumbs), no LOWER needed.
+    [_QWERTY] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, NUM_MO, NUM_OS, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                      // top row
+                                       LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT), // home row
+                                       LSFT_T(KC_GRV), LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,                      // bottom row
+                                       KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT                                                                   // thumbs
+                                       ),
 
-    // Lower layer: numbers, symbols, mouse keys (held via LOWER). Top/home/
-    // bottom rows are exactly the Lily58 marce layout's Lower top/home/
-    // bottom rows -- for the bottom row, which is 7 keys/side on Lily58,
-    // that means dropping its innermost (extra) column on each side.
-    [_LOWER] = LAYOUT_split_3x6_3_ex2(
-        KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_TRNS,                           KC_TRNS, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_BSLS,     // top row
-        KC_TRNS, KC_6, KC_7, KC_8, KC_9, KC_0, KC_TRNS,                          KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,       // home row
-        KC_TRNS, CW_CTL, TO(_NUMERIC), MS_BTN2, MS_BTN3, MS_BTN1,                 MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS,              // bottom row
-                              KC_TRNS, KC_TRNS, KC_SPC,            KC_ENT, KC_TRNS, KC_TRNS                                                         // thumbs
-        ),
+    // Lower layer: symbols, mouse keys (held via LOWER). The number row
+    // (left hand, top/home) is gone -- reach numbers via _NUMERIC instead.
+    // Right-hand top/home and the bottom row are exactly the Lily58 marce
+    // layout's Lower rows -- for the bottom row, which is 7 keys/side on
+    // Lily58, that means dropping its innermost (extra) column on each
+    // side.
+    [_LOWER] = LAYOUT_split_3x6_3_ex2(KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, KC_TRNS, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_TRNS, // top row
+                                      KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, KC_TRNS, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_BSLS, KC_TRNS, // home row
+                                      KC_TRNS, CW_CTL, KC_NO, MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS,            // bottom row
+                                      KC_TRNS, KC_TRNS, KC_SPC, KC_ENT, KC_TRNS, KC_TRNS                                                                // thumbs
+                                      ),
 
     // Raise layer: function keys, navigation (held via RAISE). Top/home/
     // bottom rows are exactly the Lily58 marce layout's Raise top/home/
     // bottom rows (Lily58's bottom-row innermost columns were both KC_NO,
     // so dropping them to fit 6/side changes nothing).
-    [_RAISE] = LAYOUT_split_3x6_3_ex2(
-        KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_TRNS,                      KC_TRNS, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_NO, KC_NO,          // top row
-        KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,                     KC_TRNS, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_NO,        // home row
-        KC_TRNS, LCTL_T(KC_F11), KC_F12, KC_F13, KC_F14, KC_F15,                  KC_HOME, KC_END, KC_PGUP, KC_PGDN, LCTL_T(KC_DEL), KC_TRNS,      // bottom row
-                              KC_TRNS, KC_TRNS, KC_NO,             KC_NO, KC_TRNS, KC_TRNS                                                          // thumbs
-        ),
+    [_RAISE] = LAYOUT_split_3x6_3_ex2(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_TRNS, KC_TRNS, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_NO, KC_TRNS,       // top row
+                                      KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS, KC_TRNS, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_TRNS,    // home row
+                                      KC_TRNS, LCTL_T(KC_F11), KC_F12, KC_F13, KC_F14, KC_F15, KC_HOME, KC_END, KC_PGUP, KC_PGDN, LCTL_T(KC_DEL), KC_TRNS, // bottom row
+                                      KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_TRNS                                                                     // thumbs
+                                      ),
 
-    // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
-    // hosts the digitizer point grid, one physical row per grid row.
-    [_ADJUST] = LAYOUT_split_3x6_3_ex2(
-        QK_BOOT, QK_RBT, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_NO, KC_TRNS,           KC_TRNS, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_KB_POWER,      // top row
-        KC_NO, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, KC_TRNS,                 KC_TRNS, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_NO,            // home row
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,                                 DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO,                     // bottom row
-                              KC_NO, KC_TRNS, KC_NO,               KC_NO, KC_TRNS, KC_NO                                                            // thumbs
-        ),
+    // Adjust layer: media keys (LOWER+RAISE). Right half hosts the
+    // digitizer point grid, one physical row per grid row. No
+    // reboot/bootloader keys here anymore; keyboard-power moved off the
+    // outer column (onto the freed NO slot next to it) so that column can
+    // stay transparent like every other layer.
+    [_ADJUST] = LAYOUT_split_3x6_3_ex2(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_KB_POWER, KC_TRNS, KC_TRNS, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
+                                       KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, KC_TRNS, KC_TRNS, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_TRNS,          // home row
+                                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_TRNS,                                   // bottom row
+                                       KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO                                                                                 // thumbs
+                                       ),
 
     // Numeric layer: numpad on the right hand, arrows on the left, entered/
-    // exited via TO(_NUMERIC)/TO(0) (TO(0) sits directly below TAB in the
-    // top-left corner). The numpad's operator column (/,*,-) and its
-    // rightmost digit column (9,6,3) both moved one column left onto the
-    // left hand, right next to the arrow column. LOWER/RAISE sit in the
-    // same thumb slots as every other layer; Space/Enter moved to the
-    // remaining inner thumb keys, and Shift/Ctrl/Alt fill the otherwise-
-    // unused left bottom row (mirrored by RCTL/RSFT flanking KC_PDOT on the
-    // right). LOWER/RAISE stay held-only escapes back to those layers,
-    // returning to _NUMERIC on release. The left outer thumb key falls
-    // through to base layer's Alt; the right one is KC_P0 instead (below
-    // KC_PDOT, which sits in the same spot as KC_DOT on the base layer).
-    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(
-        KC_TAB, KC_NO, KC_UP, KC_NO, KC_PSLS, KC_P9, KC_NO,                       KC_NO, KC_P7, KC_P8, KC_NO, KC_PPLS, KC_NO, KC_BSPC,             // top row
-        TO(0), KC_LEFT, KC_DOWN, KC_RGHT, KC_PAST, KC_P6, KC_NO,                  KC_NO, KC_P4, KC_P5, KC_NO, KC_PCMM, KC_NO, KC_NO,               // home row
-        KC_LSFT, KC_LCTL, KC_LALT, KC_NO, KC_PMNS, KC_P3,                         KC_P1, KC_P2, KC_RCTL, KC_PDOT, KC_RSFT, KC_PEQL,                // bottom row
-                              KC_TRNS, LOWER, KC_SPC,               KC_ENT, RAISE, KC_P0                                                            // thumbs
-        ),
+    // exited via TO(_NUMERIC)/TO(0) (TO(0) sits on the home row's left
+    // ex2 key, one step in from TAB's top-left corner, so the outer
+    // columns can stay identical to every other layer). The numpad's
+    // operator column (/,*,-) moved one column left onto the left hand,
+    // right next to the arrow column, and
+    // KC_BSPC swapped places with KC_PEQL/KC_RCTL -- it now sits on the
+    // left hand's innermost column (right where the 9/6/3 column used to
+    // be), so 7/8/9, 4/5/6, and 1/2/3 can each read left-to-right on the
+    // right hand, and RSFT landed on the right hand's outermost column.
+    // LOWER/RAISE sit in the same thumb slots as every other layer; Space/
+    // Enter moved to the remaining inner thumb keys, and Ctrl/Alt fill the
+    // otherwise-unused left bottom row (its outer column is KC_TRNS, so
+    // Shift -- via the base layer's LSFT_T(KC_GRV) -- still lands there),
+    // with RCTL flanking KC_PDOT on the right. LOWER/RAISE stay held-only
+    // escapes back to those layers, returning to _NUMERIC on release. The
+    // left outer thumb key falls through to base layer's Alt; the right
+    // one is KC_P0 instead (below KC_PDOT, which sits in the same spot as
+    // KC_DOT on the base layer). Every row's first and last column is now
+    // either literally identical to the base layer or KC_TRNS falling
+    // through to it, matching every other layer.
+    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_NO, KC_UP, KC_NO, KC_NO, KC_PSLS, KC_NO, KC_NO, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_TRNS,        // top row
+                                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, KC_NO, KC_PAST, TO(0), KC_NO, KC_P4, KC_P5, KC_P6, KC_PMNS, KC_NO, KC_TRNS, // home row
+                                        KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, KC_P1, KC_P2, KC_P3, KC_PDOT, KC_RCTL, KC_RSFT,               // bottom row
+                                        KC_TRNS, LOWER, KC_SPC, KC_ENT, RAISE, KC_P0                                                                    // thumbs
+                                        ),
 };
 
 #ifdef RGB_MATRIX_ENABLE
@@ -168,7 +189,7 @@ typedef struct {
 
 static const digitizer_point_t digitizer_points[9] PROGMEM = {
     {0.05f, 0.05f}, {0.5f, 0.05f}, {0.95f, 0.05f}, // DIG_TL, DIG_TC, DIG_TR
-    {0.05f, 0.5f}, {0.5f, 0.5f}, {0.95f, 0.5f},    // DIG_ML, DIG_MC, DIG_MR
+    {0.05f, 0.5f},  {0.5f, 0.5f},  {0.95f, 0.5f},  // DIG_ML, DIG_MC, DIG_MR
     {0.05f, 0.95f}, {0.5f, 0.95f}, {0.95f, 0.95f}, // DIG_BL, DIG_BC, DIG_BR
 };
 
@@ -204,7 +225,7 @@ enum dead_key {
 
 #define ALTGR_DEAD_BIT 0x80000000UL
 #define ALTGR_DEAD(id) (ALTGR_DEAD_BIT | (uint32_t)(id))
-#define ALTGR_IS_DEAD(v) (((v) &ALTGR_DEAD_BIT) != 0)
+#define ALTGR_IS_DEAD(v) (((v) & ALTGR_DEAD_BIT) != 0)
 #define ALTGR_DEAD_ID(v) ((uint8_t)((v) & 0xFF))
 
 typedef struct {
@@ -217,47 +238,47 @@ typedef struct {
 // absent here, so a lookup miss falls back to typing the plain key.
 static const altgr_entry_t altgr_map[] PROGMEM = {
     {KC_GRV, ALTGR_DEAD(DEAD_GRAVE), ALTGR_DEAD(DEAD_TILDE)},
-    {KC_1, 0x00B9, 0x00A1},                              // ¹ ¡
-    {KC_2, 0x00B2, ALTGR_DEAD(DEAD_DOUBLEACUTE)},         // ²
-    {KC_3, 0x00B3, ALTGR_DEAD(DEAD_MACRON)},              // ³
-    {KC_4, 0x00A4, 0x00A3},                               // ¤ £
-    {KC_5, 0x20AC, ALTGR_DEAD(DEAD_CEDILLA)},             // €
-    {KC_6, ALTGR_DEAD(DEAD_CIRCUMFLEX), 0x00BC},          // ¼
-    {KC_7, ALTGR_DEAD(DEAD_HORN), 0x00BD},                // ½
-    {KC_8, ALTGR_DEAD(DEAD_OGONEK), 0x00BE},              // ¾
-    {KC_9, 0x2018, ALTGR_DEAD(DEAD_BREVE)},               // '
-    {KC_0, 0x2019, ALTGR_DEAD(DEAD_ABOVERING)},           // '
-    {KC_MINS, 0x00A5, ALTGR_DEAD(DEAD_BELOWDOT)},         // ¥
-    {KC_EQL, 0x00D7, 0x00F7},                             // × ÷
+    {KC_1, 0x00B9, 0x00A1},                       // ¹ ¡
+    {KC_2, 0x00B2, ALTGR_DEAD(DEAD_DOUBLEACUTE)}, // ²
+    {KC_3, 0x00B3, ALTGR_DEAD(DEAD_MACRON)},      // ³
+    {KC_4, 0x00A4, 0x00A3},                       // ¤ £
+    {KC_5, 0x20AC, ALTGR_DEAD(DEAD_CEDILLA)},     // €
+    {KC_6, ALTGR_DEAD(DEAD_CIRCUMFLEX), 0x00BC},  // ¼
+    {KC_7, ALTGR_DEAD(DEAD_HORN), 0x00BD},        // ½
+    {KC_8, ALTGR_DEAD(DEAD_OGONEK), 0x00BE},      // ¾
+    {KC_9, 0x2018, ALTGR_DEAD(DEAD_BREVE)},       // '
+    {KC_0, 0x2019, ALTGR_DEAD(DEAD_ABOVERING)},   // '
+    {KC_MINS, 0x00A5, ALTGR_DEAD(DEAD_BELOWDOT)}, // ¥
+    {KC_EQL, 0x00D7, 0x00F7},                     // × ÷
 
-    {KC_Q, 0x00E4, 0x00C4}, // ä Ä
-    {KC_W, 0x00E5, 0x00C5}, // å Å
-    {KC_E, 0x00E9, 0x00C9}, // é É
-    {KC_R, 0x00EB, 0x00CB}, // ë Ë
-    {KC_T, 0x00FE, 0x00DE}, // þ Þ
-    {KC_Y, 0x00FC, 0x00DC}, // ü Ü
-    {KC_U, 0x00FA, 0x00DA}, // ú Ú
-    {KC_I, 0x00ED, 0x00CD}, // í Í
-    {KC_O, 0x00F3, 0x00D3}, // ó Ó
-    {KC_P, 0x00F6, 0x00D6}, // ö Ö
+    {KC_Q, 0x00E4, 0x00C4},    // ä Ä
+    {KC_W, 0x00E5, 0x00C5},    // å Å
+    {KC_E, 0x00E9, 0x00C9},    // é É
+    {KC_R, 0x00EB, 0x00CB},    // ë Ë
+    {KC_T, 0x00FE, 0x00DE},    // þ Þ
+    {KC_Y, 0x00FC, 0x00DC},    // ü Ü
+    {KC_U, 0x00FA, 0x00DA},    // ú Ú
+    {KC_I, 0x00ED, 0x00CD},    // í Í
+    {KC_O, 0x00F3, 0x00D3},    // ó Ó
+    {KC_P, 0x00F6, 0x00D6},    // ö Ö
     {KC_LBRC, 0x00AB, 0x201C}, // « "
     {KC_RBRC, 0x00BB, 0x201D}, // » "
 
-    {KC_A, 0x00E1, 0x00C1}, // á Á
-    {KC_S, 0x00DF, 0x00A7}, // ß §
-    {KC_D, 0x00F0, 0x00D0}, // ð Ð
-    {KC_J, 0x00EF, 0x00CF}, // ï Ï
-    {KC_K, 0x0153, 0x0152}, // œ Œ
-    {KC_L, 0x00F8, 0x00D8}, // ø Ø
+    {KC_A, 0x00E1, 0x00C1},    // á Á
+    {KC_S, 0x00DF, 0x00A7},    // ß §
+    {KC_D, 0x00F0, 0x00D0},    // ð Ð
+    {KC_J, 0x00EF, 0x00CF},    // ï Ï
+    {KC_K, 0x0153, 0x0152},    // œ Œ
+    {KC_L, 0x00F8, 0x00D8},    // ø Ø
     {KC_SCLN, 0x00B6, 0x00B0}, // ¶ °
     {KC_QUOT, ALTGR_DEAD(DEAD_ACUTE), ALTGR_DEAD(DEAD_DIAERESIS)},
 
-    {KC_Z, 0x00E6, 0x00C6}, // æ Æ
-    {KC_X, 0x0153, 0x0152}, // œ Œ (upstream duplicates K's mapping here)
-    {KC_C, 0x00A9, 0x00A2}, // © ¢
-    {KC_V, 0x00AE, 0x00AE}, // ®
-    {KC_N, 0x00F1, 0x00D1}, // ñ Ñ
-    {KC_M, 0x00B5, 0x00B5}, // µ
+    {KC_Z, 0x00E6, 0x00C6},    // æ Æ
+    {KC_X, 0x0153, 0x0152},    // œ Œ (upstream duplicates K's mapping here)
+    {KC_C, 0x00A9, 0x00A2},    // © ¢
+    {KC_V, 0x00AE, 0x00AE},    // ®
+    {KC_N, 0x00F1, 0x00D1},    // ñ Ñ
+    {KC_M, 0x00B5, 0x00B5},    // µ
     {KC_COMM, 0x00E7, 0x00C7}, // ç Ç
     {KC_DOT, ALTGR_DEAD(DEAD_ABOVEDOT), ALTGR_DEAD(DEAD_CARON)},
     {KC_SLSH, 0x00BF, ALTGR_DEAD(DEAD_HOOK)}, // ¿
@@ -289,31 +310,31 @@ typedef struct {
 } dead_combo_t;
 
 static const dead_combo_t dead_combos[] PROGMEM = {
-    {DEAD_GRAVE, KC_A, 0x00E0}, {DEAD_GRAVE, KC_E, 0x00E8}, {DEAD_GRAVE, KC_I, 0x00EC}, {DEAD_GRAVE, KC_O, 0x00F2}, {DEAD_GRAVE, KC_U, 0x00F9},
+    {DEAD_GRAVE, KC_A, 0x00E0},       {DEAD_GRAVE, KC_E, 0x00E8},       {DEAD_GRAVE, KC_I, 0x00EC},      {DEAD_GRAVE, KC_O, 0x00F2},      {DEAD_GRAVE, KC_U, 0x00F9},
 
-    {DEAD_ACUTE, KC_A, 0x00E1}, {DEAD_ACUTE, KC_E, 0x00E9}, {DEAD_ACUTE, KC_I, 0x00ED}, {DEAD_ACUTE, KC_O, 0x00F3}, {DEAD_ACUTE, KC_U, 0x00FA}, {DEAD_ACUTE, KC_Y, 0x00FD},
+    {DEAD_ACUTE, KC_A, 0x00E1},       {DEAD_ACUTE, KC_E, 0x00E9},       {DEAD_ACUTE, KC_I, 0x00ED},      {DEAD_ACUTE, KC_O, 0x00F3},      {DEAD_ACUTE, KC_U, 0x00FA},      {DEAD_ACUTE, KC_Y, 0x00FD},
 
-    {DEAD_TILDE, KC_A, 0x00E3}, {DEAD_TILDE, KC_N, 0x00F1}, {DEAD_TILDE, KC_O, 0x00F5},
+    {DEAD_TILDE, KC_A, 0x00E3},       {DEAD_TILDE, KC_N, 0x00F1},       {DEAD_TILDE, KC_O, 0x00F5},
 
-    {DEAD_CIRCUMFLEX, KC_A, 0x00E2}, {DEAD_CIRCUMFLEX, KC_E, 0x00EA}, {DEAD_CIRCUMFLEX, KC_I, 0x00EE}, {DEAD_CIRCUMFLEX, KC_O, 0x00F4}, {DEAD_CIRCUMFLEX, KC_U, 0x00FB},
+    {DEAD_CIRCUMFLEX, KC_A, 0x00E2},  {DEAD_CIRCUMFLEX, KC_E, 0x00EA},  {DEAD_CIRCUMFLEX, KC_I, 0x00EE}, {DEAD_CIRCUMFLEX, KC_O, 0x00F4}, {DEAD_CIRCUMFLEX, KC_U, 0x00FB},
 
-    {DEAD_DIAERESIS, KC_A, 0x00E4}, {DEAD_DIAERESIS, KC_E, 0x00EB}, {DEAD_DIAERESIS, KC_I, 0x00EF}, {DEAD_DIAERESIS, KC_O, 0x00F6}, {DEAD_DIAERESIS, KC_U, 0x00FC},
+    {DEAD_DIAERESIS, KC_A, 0x00E4},   {DEAD_DIAERESIS, KC_E, 0x00EB},   {DEAD_DIAERESIS, KC_I, 0x00EF},  {DEAD_DIAERESIS, KC_O, 0x00F6},  {DEAD_DIAERESIS, KC_U, 0x00FC},
 
     {DEAD_CEDILLA, KC_C, 0x00E7},
 
-    {DEAD_CARON, KC_Z, 0x017E}, {DEAD_CARON, KC_C, 0x010D}, {DEAD_CARON, KC_S, 0x0161},
+    {DEAD_CARON, KC_Z, 0x017E},       {DEAD_CARON, KC_C, 0x010D},       {DEAD_CARON, KC_S, 0x0161},
 
     {DEAD_ABOVEDOT, KC_Z, 0x017C},
 
-    {DEAD_OGONEK, KC_A, 0x0105}, {DEAD_OGONEK, KC_E, 0x0119},
+    {DEAD_OGONEK, KC_A, 0x0105},      {DEAD_OGONEK, KC_E, 0x0119},
 
     {DEAD_BREVE, KC_A, 0x0103},
 
     {DEAD_DOUBLEACUTE, KC_O, 0x0151}, {DEAD_DOUBLEACUTE, KC_U, 0x0171},
 
-    {DEAD_MACRON, KC_A, 0x0101}, {DEAD_MACRON, KC_E, 0x0113}, {DEAD_MACRON, KC_I, 0x012B}, {DEAD_MACRON, KC_O, 0x014D}, {DEAD_MACRON, KC_U, 0x016B},
+    {DEAD_MACRON, KC_A, 0x0101},      {DEAD_MACRON, KC_E, 0x0113},      {DEAD_MACRON, KC_I, 0x012B},     {DEAD_MACRON, KC_O, 0x014D},     {DEAD_MACRON, KC_U, 0x016B},
 
-    {DEAD_ABOVERING, KC_A, 0x00E5}, {DEAD_ABOVERING, KC_U, 0x016F},
+    {DEAD_ABOVERING, KC_A, 0x00E5},   {DEAD_ABOVERING, KC_U, 0x016F},
 };
 
 // All dead_combos codepoints above are either Latin-1 Supplement accented
@@ -351,9 +372,9 @@ static bool dead_combo_lookup(uint8_t dead, uint16_t keycode, uint32_t *out) {
     return false;
 }
 
-static bool     mac_altgr_mode     = false; // false = PC (passthrough), true = Mac (Unicode-fake)
-static bool     ralt_held          = false;
-static uint8_t  pending_dead       = DEAD_NONE;
+static bool     mac_altgr_mode      = false; // false = PC (passthrough), true = Mac (Unicode-fake)
+static bool     ralt_held           = false;
+static uint8_t  pending_dead        = DEAD_NONE;
 static uint16_t altgr_swallowed_key = KC_NO;
 
 #ifdef RGB_MATRIX_ENABLE
@@ -388,7 +409,62 @@ void matrix_scan_user(void) {
     }
 }
 
+// --- NUM_MO / NUM_OS: _NUMERIC access from the old volume keys ---------
+static bool num_mo_held  = false; // NUM_MO physically held
+static bool num_os_held  = false; // NUM_OS physically held
+static bool num_locked   = false; // chorded: _NUMERIC stays on regardless of holds
+static bool num_one_shot = false; // NUM_OS-armed one-shot, awaiting the next keystroke
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // Consume a pending NUM_OS one-shot the moment any other key is pressed.
+    if (num_one_shot && record->event.pressed && keycode != NUM_MO && keycode != NUM_OS) {
+        num_one_shot = false;
+        if (!num_locked && !num_mo_held) {
+            layer_off(_NUMERIC);
+        }
+    }
+
+    if (keycode == NUM_MO) {
+        if (record->event.pressed) {
+            num_mo_held = true;
+            if (num_os_held) {
+                num_locked   = true;
+                num_one_shot = false;
+            }
+            layer_on(_NUMERIC);
+        } else {
+            num_mo_held = false;
+            if (!num_locked) {
+                layer_off(_NUMERIC);
+            }
+        }
+        return false;
+    }
+
+    if (keycode == NUM_OS) {
+        if (record->event.pressed) {
+            num_os_held = true;
+            if (num_mo_held) {
+                num_locked   = true;
+                num_one_shot = false;
+            } else {
+                num_one_shot = true;
+            }
+            layer_on(_NUMERIC);
+        } else {
+            num_os_held = false;
+        }
+        return false;
+    }
+
+    // TO(0) is _NUMERIC's own way back to the base layer (see its home-row
+    // key) -- also the "current method" NUM_MO+NUM_OS's lock exits through.
+    if (keycode == TO(0) && record->event.pressed) {
+        num_locked   = false;
+        num_one_shot = false;
+        return true; // let QMK's own TO() handling still run
+    }
+
     // Resolve a held CW_CTL as Ctrl the moment any other key is pressed.
     if (cw_ctl_held && !cw_ctl_is_ctrl && keycode != CW_CTL && record->event.pressed) {
         register_code(KC_LCTL);
@@ -450,8 +526,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     if (pending_dead != DEAD_NONE && record->event.pressed) {
-        uint8_t  dead = pending_dead;
-        pending_dead  = DEAD_NONE;
+        uint8_t dead = pending_dead;
+        pending_dead = DEAD_NONE;
         uint32_t composed;
         if (dead_combo_lookup(dead, keycode, &composed)) {
             register_unicode(altgr_dead_case_adjust(composed, (get_mods() & MOD_MASK_SHIFT) != 0));
