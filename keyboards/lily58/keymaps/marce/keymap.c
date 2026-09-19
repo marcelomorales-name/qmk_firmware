@@ -20,9 +20,6 @@
 
 extern uint8_t is_master;
 
-// _NUMERIC must stay below _LOWER/_RAISE/_ADJUST: QMK resolves keys from the
-// highest active layer down, so LOWER/RAISE held while _NUMERIC is on only
-// overlay it (instead of being shadowed by it) if they outrank it here.
 enum layers {
     _QWERTY,
     _NUMERIC,
@@ -35,23 +32,24 @@ enum layers {
 enum {
     TAP_SPC_ENT,
     TAP_NUMERIC, // tap: one-shot _NUMERIC (next key only); hold: momentary _NUMERIC
+    TAP_NUM_F,   // tap: F; hold: numeric_grid_mode = GRID_F (see below)
+    TAP_NUM_G,   // tap: G; hold: numeric_grid_mode = GRID_G
 };
 
-// Digitizer point keys: each moves the digitizer cursor to a fixed absolute
-// position on screen without clicking, mirroring the numpad's spatial layout
-// (7=top-left, 5=center, 3=bottom-right, ...). Order must match
-// digitizer_points[] below.
 enum custom_keycodes {
-    DIG_TL = SAFE_RANGE,
-    DIG_TC,
-    DIG_TR,
-    DIG_ML,
-    DIG_MC,
-    DIG_MR,
-    DIG_BL,
-    DIG_BC,
-    DIG_BR,
-    ALTGR_MC, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
+    ALTGR_MC = SAFE_RANGE, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
+    // _NUMERIC's numpad-grid cells, numbered 1-9 like the numpad they
+    // stand in for. Handled in process_record_user: plain digit normally,
+    // or an F-key while TAP_NUM_F/TAP_NUM_G is held (see numeric_grid_mode).
+    NUMGRID_1,
+    NUMGRID_2,
+    NUMGRID_3,
+    NUMGRID_4,
+    NUMGRID_5,
+    NUMGRID_6,
+    NUMGRID_7,
+    NUMGRID_8,
+    NUMGRID_9,
 };
 
 // Tap _NUMERIC: one-shot for the next keypress only. Hold _NUMERIC: momentary,
@@ -75,11 +73,53 @@ void td_numeric_reset(tap_dance_state_t *state, void *user_data) {
     }
 }
 
+// Holding F or G on _NUMERIC retargets the numpad grid (NUMGRID_1..9) to
+// F-keys instead of switching layers: GRID_NONE types plain digits,
+// GRID_F/GRID_G pick the F1-F9/F11-F19 bank (see process_record_user).
+enum { GRID_NONE = 0, GRID_F, GRID_G };
+static uint8_t numeric_grid_mode      = GRID_NONE;
+static bool    numeric_grid_f_held    = false;
+static bool    numeric_grid_g_held    = false;
+
+void td_num_f_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->pressed) {
+        numeric_grid_mode   = GRID_F;
+        numeric_grid_f_held = true;
+    } else {
+        tap_code(KC_F);
+    }
+}
+
+void td_num_f_reset(tap_dance_state_t *state, void *user_data) {
+    if (numeric_grid_f_held) {
+        numeric_grid_mode   = GRID_NONE;
+        numeric_grid_f_held = false;
+    }
+}
+
+void td_num_g_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->pressed) {
+        numeric_grid_mode   = GRID_G;
+        numeric_grid_g_held = true;
+    } else {
+        tap_code(KC_G);
+    }
+}
+
+void td_num_g_reset(tap_dance_state_t *state, void *user_data) {
+    if (numeric_grid_g_held) {
+        numeric_grid_mode   = GRID_NONE;
+        numeric_grid_g_held = false;
+    }
+}
+
 // Tap Dance definitions
 tap_dance_action_t tap_dance_actions[] = {
     // Tap once for Escape, twice for Caps Lock
     [TAP_SPC_ENT] = ACTION_TAP_DANCE_DOUBLE(KC_SPC, KC_ENT),
     [TAP_NUMERIC] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_numeric_finished, td_numeric_reset),
+    [TAP_NUM_F]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_num_f_finished, td_num_f_reset),
+    [TAP_NUM_G]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_num_g_finished, td_num_g_reset),
 };
 
 #define RAISE MO(_RAISE)
@@ -88,49 +128,54 @@ tap_dance_action_t tap_dance_actions[] = {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY
     [_QWERTY] = LAYOUT(KC_GRV, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_BSPC,                                            // number row
-                       KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                                            // top row
+                       KC_TAB, LT(_NUMERIC, KC_Q), KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,                              // top row
                        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),                         // home row
-                       KC_LSFT, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, TD(TAP_NUMERIC), QK_REPEAT_KEY, KC_N, KC_M, KC_COMM, RALT_T(KC_DOT), RCTL_T(KC_SLSH), KC_RSFT, // bottom row
+                       KC_LSFT, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, TD(TAP_NUMERIC), KC_NO, KC_N, KC_M, KC_COMM, RALT_T(KC_DOT), RCTL_T(KC_SLSH), KC_RSFT, // bottom row
                        KC_LCTL, KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT, RCTL_T(KC_RGUI)                               // thumbs
                        ),
 
     // Lower layer: numbers, symbols, mouse keys (held via LOWER)
     [_LOWER] = LAYOUT(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,                                  // number row
                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_TRNS,                            // top row
-                      KC_TRNS, CW_TOGG, TG(_NUMERIC), KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,                     // home row
+                      KC_TRNS, KC_NO, TG(_NUMERIC), KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_NO, KC_TRNS,                     // home row
                       KC_TRNS, LCTL_T(KC_NO), LALT_T(KC_NO), MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLU, MS_WHLD, MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, RCTL_T(KC_NO), KC_TRNS, // bottom row
-                      KC_TRNS, KC_TRNS, KC_TRNS, KC_SPC, KC_ENT, KC_TRNS, KC_TRNS, KC_TRNS                                                      // thumbs
+                      KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS                                                    // thumbs
                       ),
 
-    // Raise layer: function keys, navigation (held via RAISE)
+    // Raise layer: navigation (held via RAISE). Function keys used to live
+    // here but moved to the numeric layer's F/G overlays (_NUMERIC_F/_NUMERIC_G).
     [_RAISE] = LAYOUT(KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS,                               // number row
-                      KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_INS, KC_TRNS,                          // top row
-                      KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_DEL, KC_TRNS,                        // home row
-                      KC_TRNS, LCTL_T(KC_F11), LALT_T(KC_F12), KC_F13, KC_F14, KC_F15, QK_ALT_REPEAT_KEY, KC_NO, KC_HOME, KC_PGDN, KC_PGUP, RALT_T(KC_END), RCTL_T(KC_NO), KC_TRNS, // bottom row
-                      KC_TRNS, KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_TRNS, KC_TRNS                                                     // thumbs
+                      KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_PSCR, KC_PAUS, KC_APP, KC_NO, KC_INS, KC_TRNS,                          // top row
+                      KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_DEL, KC_TRNS,                        // home row
+                      KC_TRNS, LCTL_T(KC_NO), LALT_T(KC_NO), KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_HOME, KC_PGDN, KC_PGUP, RALT_T(KC_END), RCTL_T(KC_NO), KC_TRNS, // bottom row
+                      KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS                                                    // thumbs
                       ),
 
-    // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE). Right half
-    // hosts a digitizer point grid at the numpad-analog positions.
+    // Adjust layer: reboot/bootloader, media keys (LOWER+RAISE).
     [_ADJUST] = LAYOUT(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, // number row
-                       KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
-                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_TRNS,       // home row
-                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_TRNS, // bottom row
-                       KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO, KC_NO                                        // thumbs
+                       KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, // top row
+                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS,       // home row
+                       KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_TRNS, // bottom row
+                       KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS                            // thumbs
                        ),
 
     // Numeric layer: number-row digits/symbols (not numpad keycodes, so they
     // aren't affected by the host's Num Lock state) arranged in a numpad-style
     // grid on the right hand, WASD-as-arrows on the left.
     // Entered/exited by tapping TAP_NUMERIC (one-shot) or holding it (MO),
-    // or via TG(_NUMERIC) on _LOWER for a persistent toggle that this same
-    // key also switches back off. LOWER/RAISE stay held-only escapes back
-    // to those layers, returning to _NUMERIC on release.
+    // by holding Q on _QWERTY (LT), or via TG(_NUMERIC) on _LOWER for a
+    // persistent toggle that this same key also switches back off.
+    // LOWER/RAISE stay held-only escapes back to those layers, returning to
+    // _NUMERIC on release. Holding F/G here retargets the NUMGRID_* cells
+    // to F1-F9/F11-F19 instead of plain digits (see numeric_grid_mode and
+    // process_record_user); no extra layer needed since it's the same nine
+    // physical positions either way.
+    // Holding T applies Ctrl+Shift+Gui as a modifier instead of typing T.
     [_NUMERIC] = LAYOUT(KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_NUM, KC_SLSH, LSFT(KC_8), KC_MINS, KC_NO, KC_TRNS,      // number row
-                        KC_TRNS, KC_Q, KC_UP, KC_E, KC_R, KC_T, KC_7, KC_8, KC_9, LSFT(KC_EQL), KC_NO, KC_TRNS,          // top row
-                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, KC_F, KC_G, KC_4, KC_5, KC_6, KC_COMM, KC_NO, KC_TRNS,       // home row
-                        KC_TRNS, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, KC_TRNS, KC_NO, KC_1, KC_2, KC_3, RALT_T(KC_EQL), RCTL_T(KC_NO), KC_TRNS, // bottom row
-                        KC_LCTL, KC_LALT, LOWER, KC_SPC, KC_ENT, RAISE, KC_0, KC_DOT                                      // thumbs
+                        KC_TRNS, LT(_NUMERIC, KC_Q), KC_UP, KC_E, KC_R, MT(MOD_LCTL | MOD_LSFT | MOD_LGUI, KC_T), NUMGRID_7, NUMGRID_8, NUMGRID_9, LSFT(KC_EQL), KC_NO, KC_TRNS, // top row
+                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, TD(TAP_NUM_F), TD(TAP_NUM_G), NUMGRID_4, NUMGRID_5, NUMGRID_6, KC_COMM, KC_NO, KC_TRNS, // home row
+                        KC_TRNS, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, KC_TRNS, KC_NO, NUMGRID_1, NUMGRID_2, NUMGRID_3, RALT_T(KC_EQL), RCTL_T(KC_NO), KC_TRNS, // bottom row
+                        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS                            // thumbs
                         ),
 };
 
@@ -138,47 +183,20 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     return update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
 }
 
-// Absolute screen positions for the DIG_* keys, indexed by keycode - DIG_TL.
-// Order must match the custom_keycodes enum above.
-typedef struct {
-    float x;
-    float y;
-} digitizer_point_t;
-
-static const digitizer_point_t digitizer_points[9] PROGMEM = {
-    {0.05f, 0.05f}, {0.5f, 0.05f}, {0.95f, 0.05f}, // DIG_TL, DIG_TC, DIG_TR
-    {0.05f, 0.5f}, {0.5f, 0.5f}, {0.95f, 0.5f},    // DIG_ML, DIG_MC, DIG_MR
-    {0.05f, 0.95f}, {0.5f, 0.95f}, {0.95f, 0.95f}, // DIG_BL, DIG_BC, DIG_BR
-};
-
 // --- Mac/PC AltGr switch -----------------------------------------------
 //
 // PC mode: KC_RALT behaves exactly as a normal AltGr modifier (today's
 // behavior, passed straight to the host). Mac mode: the physical AltGr
-// press is swallowed and the keyboard fakes the us(altgr-intl) XKB AltGr
-// layer itself by typing Unicode characters via QMK's UC_MAC Unicode-Hex
-// Input, since macOS has no equivalent host-side AltGr layer. The mapping
-// below (including the dead-key composition) is transcribed from the
-// upstream xkeyboard-config `symbols/us` "intl"/"altgr-intl" sections.
+// press is swallowed and the keyboard types Unicode characters via QMK's
+// UC_MAC Unicode-Hex Input, since macOS has no equivalent host-side AltGr
+// layer. Trimmed to just the Spanish accented letters and inverted
+// punctuation: á é í ó ú ü ñ ¿ ¡ (and their uppercase forms).
 
 enum dead_key {
     DEAD_NONE = 0,
-    DEAD_GRAVE,
     DEAD_ACUTE,
     DEAD_TILDE,
-    DEAD_CIRCUMFLEX,
     DEAD_DIAERESIS,
-    DEAD_CEDILLA,
-    DEAD_OGONEK,
-    DEAD_BREVE,
-    DEAD_ABOVERING,
-    DEAD_DOUBLEACUTE,
-    DEAD_MACRON,
-    DEAD_BELOWDOT,
-    DEAD_ABOVEDOT,
-    DEAD_CARON,
-    DEAD_HORN,
-    DEAD_HOOK,
 };
 
 #define ALTGR_DEAD_BIT 0x80000000UL
@@ -192,73 +210,21 @@ typedef struct {
     uint32_t shifted; // AltGr+Shift level (xkb level 4)
 } altgr_entry_t;
 
-// Keys with no AltGr mapping in us(altgr-intl) (f, g, h, b, ...) are simply
-// absent here, so a lookup miss falls back to typing the plain key.
+// Keys with no AltGr mapping are simply absent here, so a lookup miss falls
+// back to typing the plain key.
 static const altgr_entry_t altgr_map[] PROGMEM = {
-    {KC_GRV, ALTGR_DEAD(DEAD_GRAVE), ALTGR_DEAD(DEAD_TILDE)},
-    {KC_1, 0x00B9, 0x00A1},                              // ¹ ¡
-    {KC_2, 0x00B2, ALTGR_DEAD(DEAD_DOUBLEACUTE)},         // ²
-    {KC_3, 0x00B3, ALTGR_DEAD(DEAD_MACRON)},              // ³
-    {KC_4, 0x00A4, 0x00A3},                               // ¤ £
-    {KC_5, 0x20AC, ALTGR_DEAD(DEAD_CEDILLA)},             // €
-    {KC_6, ALTGR_DEAD(DEAD_CIRCUMFLEX), 0x00BC},          // ¼
-    {KC_7, ALTGR_DEAD(DEAD_HORN), 0x00BD},                // ½
-    {KC_8, ALTGR_DEAD(DEAD_OGONEK), 0x00BE},              // ¾
-    {KC_9, 0x2018, ALTGR_DEAD(DEAD_BREVE)},               // '
-    {KC_0, 0x2019, ALTGR_DEAD(DEAD_ABOVERING)},           // '
-    {KC_MINS, 0x00A5, ALTGR_DEAD(DEAD_BELOWDOT)},         // ¥
-    {KC_EQL, 0x00D7, 0x00F7},                             // × ÷
-
-    {KC_Q, 0x00E4, 0x00C4}, // ä Ä
-    {KC_W, 0x00E5, 0x00C5}, // å Å
-    {KC_E, 0x00E9, 0x00C9}, // é É
-    {KC_R, 0x00EB, 0x00CB}, // ë Ë
-    {KC_T, 0x00FE, 0x00DE}, // þ Þ
-    {KC_Y, 0x00FC, 0x00DC}, // ü Ü
-    {KC_U, 0x00FA, 0x00DA}, // ú Ú
-    {KC_I, 0x00ED, 0x00CD}, // í Í
-    {KC_O, 0x00F3, 0x00D3}, // ó Ó
-    {KC_P, 0x00F6, 0x00D6}, // ö Ö
-    {KC_LBRC, 0x00AB, 0x201C}, // « "
-    {KC_RBRC, 0x00BB, 0x201D}, // » "
-
-    {KC_A, 0x00E1, 0x00C1}, // á Á
-    {KC_S, 0x00DF, 0x00A7}, // ß §
-    {KC_D, 0x00F0, 0x00D0}, // ð Ð
-    {KC_J, 0x00EF, 0x00CF}, // ï Ï
-    {KC_K, 0x0153, 0x0152}, // œ Œ
-    {KC_L, 0x00F8, 0x00D8}, // ø Ø
-    {KC_SCLN, 0x00B6, 0x00B0}, // ¶ °
-    {KC_QUOT, ALTGR_DEAD(DEAD_ACUTE), ALTGR_DEAD(DEAD_DIAERESIS)},
-
-    {KC_Z, 0x00E6, 0x00C6}, // æ Æ
-    {KC_X, 0x0153, 0x0152}, // œ Œ (upstream duplicates K's mapping here)
-    {KC_C, 0x00A9, 0x00A2}, // © ¢
-    {KC_V, 0x00AE, 0x00AE}, // ®
-    {KC_N, 0x00F1, 0x00D1}, // ñ Ñ
-    {KC_M, 0x00B5, 0x00B5}, // µ
-    {KC_COMM, 0x00E7, 0x00C7}, // ç Ç
-    {KC_DOT, ALTGR_DEAD(DEAD_ABOVEDOT), ALTGR_DEAD(DEAD_CARON)},
-    {KC_SLSH, 0x00BF, ALTGR_DEAD(DEAD_HOOK)}, // ¿
-    {KC_BSLS, 0x00AC, 0x00A6},                // ¬ ¦
+    {KC_GRV, 0x0060, ALTGR_DEAD(DEAD_TILDE)},                       // ` (plain) / dead tilde -> ñ Ñ
+    {KC_QUOT, ALTGR_DEAD(DEAD_ACUTE), ALTGR_DEAD(DEAD_DIAERESIS)},  // dead acute -> áéíóú / dead diaeresis -> ü
+    {KC_1, 0x00A1, 0x00A1},                                          // ¡
+    {KC_SLSH, 0x00BF, 0x00BF},                                       // ¿
 };
 
 // Spacing glyph typed when a dead key isn't followed by a known combiner
 // (0 = no clean standalone glyph, so nothing extra is typed).
-static const uint16_t dead_spacing[DEAD_HOOK + 1] PROGMEM = {
-    [DEAD_GRAVE]       = 0x0060, // `
-    [DEAD_ACUTE]       = 0x00B4, // ´
-    [DEAD_TILDE]       = 0x007E, // ~
-    [DEAD_CIRCUMFLEX]  = 0x005E, // ^
-    [DEAD_DIAERESIS]   = 0x00A8, // ¨
-    [DEAD_CEDILLA]     = 0x00B8, // ¸
-    [DEAD_OGONEK]      = 0x02DB, // ˛
-    [DEAD_BREVE]       = 0x02D8, // ˘
-    [DEAD_ABOVERING]   = 0x02DA, // ˚
-    [DEAD_DOUBLEACUTE] = 0x02DD, // ˝
-    [DEAD_MACRON]      = 0x00AF, // ¯
-    [DEAD_ABOVEDOT]    = 0x02D9, // ˙
-    [DEAD_CARON]       = 0x02C7, // ˇ
+static const uint16_t dead_spacing[DEAD_DIAERESIS + 1] PROGMEM = {
+    [DEAD_ACUTE]     = 0x00B4, // ´
+    [DEAD_TILDE]     = 0x007E, // ~
+    [DEAD_DIAERESIS] = 0x00A8, // ¨
 };
 
 typedef struct {
@@ -268,41 +234,18 @@ typedef struct {
 } dead_combo_t;
 
 static const dead_combo_t dead_combos[] PROGMEM = {
-    {DEAD_GRAVE, KC_A, 0x00E0}, {DEAD_GRAVE, KC_E, 0x00E8}, {DEAD_GRAVE, KC_I, 0x00EC}, {DEAD_GRAVE, KC_O, 0x00F2}, {DEAD_GRAVE, KC_U, 0x00F9},
+    {DEAD_ACUTE, KC_A, 0x00E1}, {DEAD_ACUTE, KC_E, 0x00E9}, {DEAD_ACUTE, KC_I, 0x00ED}, {DEAD_ACUTE, KC_O, 0x00F3}, {DEAD_ACUTE, KC_U, 0x00FA},
 
-    {DEAD_ACUTE, KC_A, 0x00E1}, {DEAD_ACUTE, KC_E, 0x00E9}, {DEAD_ACUTE, KC_I, 0x00ED}, {DEAD_ACUTE, KC_O, 0x00F3}, {DEAD_ACUTE, KC_U, 0x00FA}, {DEAD_ACUTE, KC_Y, 0x00FD},
+    {DEAD_TILDE, KC_N, 0x00F1},
 
-    {DEAD_TILDE, KC_A, 0x00E3}, {DEAD_TILDE, KC_N, 0x00F1}, {DEAD_TILDE, KC_O, 0x00F5},
-
-    {DEAD_CIRCUMFLEX, KC_A, 0x00E2}, {DEAD_CIRCUMFLEX, KC_E, 0x00EA}, {DEAD_CIRCUMFLEX, KC_I, 0x00EE}, {DEAD_CIRCUMFLEX, KC_O, 0x00F4}, {DEAD_CIRCUMFLEX, KC_U, 0x00FB},
-
-    {DEAD_DIAERESIS, KC_A, 0x00E4}, {DEAD_DIAERESIS, KC_E, 0x00EB}, {DEAD_DIAERESIS, KC_I, 0x00EF}, {DEAD_DIAERESIS, KC_O, 0x00F6}, {DEAD_DIAERESIS, KC_U, 0x00FC},
-
-    {DEAD_CEDILLA, KC_C, 0x00E7},
-
-    {DEAD_CARON, KC_Z, 0x017E}, {DEAD_CARON, KC_C, 0x010D}, {DEAD_CARON, KC_S, 0x0161},
-
-    {DEAD_ABOVEDOT, KC_Z, 0x017C},
-
-    {DEAD_OGONEK, KC_A, 0x0105}, {DEAD_OGONEK, KC_E, 0x0119},
-
-    {DEAD_BREVE, KC_A, 0x0103},
-
-    {DEAD_DOUBLEACUTE, KC_O, 0x0151}, {DEAD_DOUBLEACUTE, KC_U, 0x0171},
-
-    {DEAD_MACRON, KC_A, 0x0101}, {DEAD_MACRON, KC_E, 0x0113}, {DEAD_MACRON, KC_I, 0x012B}, {DEAD_MACRON, KC_O, 0x014D}, {DEAD_MACRON, KC_U, 0x016B},
-
-    {DEAD_ABOVERING, KC_A, 0x00E5}, {DEAD_ABOVERING, KC_U, 0x016F},
+    {DEAD_DIAERESIS, KC_U, 0x00FC},
 };
 
-// All dead_combos codepoints above are either Latin-1 Supplement accented
-// vowels (uppercase = lowercase - 0x20) or Latin Extended-A pairs in the
-// 0100-0177 block (uppercase = lowercase - 1). Both hold for every value
-// used here; this is not a general Unicode case-folding rule.
+// All dead_combos codepoints above are Latin-1 Supplement accented letters
+// in the 0xE0-0xFE range, where uppercase = lowercase - 0x20.
 static uint32_t altgr_dead_case_adjust(uint32_t cp, bool shift) {
     if (!shift) return cp;
-    if (cp >= 0x00E0 && cp <= 0x00FE && cp != 0x00F7) return cp - 0x20;
-    if (cp >= 0x0100 && cp <= 0x0177) return cp - 1;
+    if (cp >= 0x00E0 && cp <= 0x00FE) return cp - 0x20;
     return cp;
 }
 
@@ -335,7 +278,31 @@ static bool     ralt_held          = false;
 static uint8_t  pending_dead       = DEAD_NONE;
 static uint16_t altgr_swallowed_key = KC_NO;
 
+// Sent per grid cell so release unregisters exactly what press registered,
+// even if numeric_grid_mode changes mid-hold.
+static uint16_t numgrid_sent[9] = {0};
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (keycode >= NUMGRID_1 && keycode <= NUMGRID_9) {
+        uint8_t idx = keycode - NUMGRID_1;
+        if (record->event.pressed) {
+            uint8_t  digit = idx + 1;
+            uint16_t code;
+            if (numeric_grid_mode == GRID_NONE) {
+                code = KC_1 + idx; // KC_1..KC_9 are contiguous
+            } else {
+                uint8_t target = digit + (numeric_grid_mode == GRID_G ? 10 : 0);
+                code            = (target <= 12) ? (KC_F1 + target - 1) : (KC_F13 + target - 13);
+            }
+            numgrid_sent[idx] = code;
+            register_code16(code);
+        } else if (numgrid_sent[idx]) {
+            unregister_code16(numgrid_sent[idx]);
+            numgrid_sent[idx] = 0;
+        }
+        return false;
+    }
+
     // macOS uses "natural" (inverted) scrolling direction vs. PC.
     if (mac_altgr_mode && (keycode == MS_WHLU || keycode == MS_WHLD)) {
         uint16_t inverted = (keycode == MS_WHLU) ? MS_WHLD : MS_WHLU;
@@ -400,17 +367,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         return true;
     }
 
-    if (keycode >= DIG_TL && keycode <= DIG_BR) {
-        digitizer_point_t point;
-        memcpy_P(&point, &digitizer_points[keycode - DIG_TL], sizeof(point));
-        if (record->event.pressed) {
-            digitizer_in_range_on();
-            digitizer_set_position(point.x, point.y);
-        } else {
-            digitizer_in_range_off();
-        }
-        return false;
-    }
     return true;
 }
 
@@ -483,12 +439,6 @@ bool oled_task_user(void) {
     if (is_keyboard_master()) {
         // 32w x 128h logical canvas: tall, narrow digit, centered.
         draw_big_digit(layer, 5, 32, 22, 64, 6);
-        // Caps Word indicator: only the master knows the real state (it
-        // isn't synced across split like layer_state is), so it only
-        // renders here.
-        if (is_caps_word_on()) {
-            oled_fill_rect(4, 4, 10, 10);
-        }
         // AltGr mode indicator: PC (passthrough) vs Mac (Unicode-fake).
         oled_set_cursor(0, 14);
         oled_write_P(mac_altgr_mode ? PSTR("MAC") : PSTR("PC"), false);

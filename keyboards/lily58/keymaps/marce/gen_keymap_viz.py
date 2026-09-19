@@ -515,6 +515,20 @@ function labelFor(tok){
   if (m = tok.match(/^LSFT\((.+)\)$/)) return { main: SHIFTED[m[1]] || ("⇧" + kc(m[1])), sub:"", type:"alpha" };
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
   if (tok === "TD(TAP_NUMERIC)") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "TD(TAP_NUM_F)") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "TD(TAP_NUM_G)") return { main:"G", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (m = tok.match(/^NUMGRID_([1-9])$/)) return { main:m[1], sub:"F-grid", type:"numpad" };
+  if (m = tok.match(/^LT\((\w+),\s*(KC_\w+)\)$/)) {
+    const target = m[1];
+    const label = target === "_NUMERIC" ? "Numeric" : target.replace(/^_/,"").toLowerCase().replace(/^./,c=>c.toUpperCase());
+    const hue = target === "_NUMERIC" ? "var(--hue-numeric)" : undefined;
+    return { main: kc(m[2]), sub: "hold → " + label, type:"dual", hue };
+  }
+  if (m = tok.match(/^MT\((.+),\s*(KC_\w+)\)$/)) {
+    const modLabels = { MOD_LCTL:"⌃", MOD_RCTL:"⌃", MOD_LALT:"⌥", MOD_RALT:"⌥", MOD_LSFT:"⇧", MOD_RSFT:"⇧", MOD_LGUI:"⌘", MOD_RGUI:"⌘" };
+    const sub = m[1].split("|").map(s => modLabels[s.trim()] || s.trim()).join("");
+    return { main: kc(m[2]), sub, type:"dual" };
+  }
   if (tok === "LOWER") return { main:"Lower", sub:"", type:"layer", hue:"var(--hue-lower)" };
   if (tok === "RAISE") return { main:"Raise", sub:"", type:"layer", hue:"var(--hue-raise)" };
   if (m = tok.match(/^TG\((\w+)\)$/)) {
