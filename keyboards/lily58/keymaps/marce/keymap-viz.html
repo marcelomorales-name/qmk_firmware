@@ -365,7 +365,7 @@ const LAYERS = {
     "KC_C",
     "KC_V",
     "KC_B",
-    "TD(TAP_NUMERIC)",
+    "NUM_LAYER",
     "KC_NO",
     "KC_N",
     "KC_M",
@@ -411,8 +411,8 @@ const LAYERS = {
     "KC_LEFT",
     "KC_DOWN",
     "KC_RGHT",
-    "TD(TAP_NUM_F)",
-    "TD(TAP_NUM_G)",
+    "NUM_GRD_F",
+    "NUM_GRD_G",
     "NUMGRID_4",
     "NUMGRID_5",
     "NUMGRID_6",
@@ -581,9 +581,21 @@ const LAYERS = {
     "KC_NUM",
     "KC_CAPS",
     "KC_NO",
+    "DIG_TL",
+    "DIG_TC",
+    "DIG_TR",
+    "KC_NO",
+    "KC_NO",
+    "KC_TRNS",
+    "KC_TRNS",
     "KC_NO",
     "KC_NO",
     "KC_NO",
+    "KC_NO",
+    "KC_NO",
+    "DIG_ML",
+    "DIG_MC",
+    "DIG_MR",
     "KC_NO",
     "KC_NO",
     "KC_TRNS",
@@ -595,21 +607,9 @@ const LAYERS = {
     "KC_NO",
     "KC_NO",
     "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_TRNS",
-    "KC_TRNS",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
-    "KC_NO",
+    "DIG_BL",
+    "DIG_BC",
+    "DIG_BR",
     "KC_NO",
     "KC_NO",
     "KC_TRNS",
@@ -648,10 +648,14 @@ function labelFor(tok){
   if (m = tok.match(/^RSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
   if (m = tok.match(/^LSFT\((.+)\)$/)) return { main: SHIFTED[m[1]] || ("⇧" + kc(m[1])), sub:"", type:"alpha" };
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
-  if (tok === "TD(TAP_NUMERIC)") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
-  if (tok === "TD(TAP_NUM_F)") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
-  if (tok === "TD(TAP_NUM_G)") return { main:"G", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_LAYER") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_GRD_F") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_GRD_G") return { main:"G", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
   if (m = tok.match(/^NUMGRID_([1-9])$/)) return { main:m[1], sub:"F-grid", type:"numpad" };
+  if (m = tok.match(/^DIG_([TMB])([LCR])$/)) {
+    const rows = { T:"top", M:"mid", B:"bottom" }, cols = { L:"left", C:"center", R:"right" };
+    return { main:"⊕", sub:rows[m[1]] + " " + cols[m[2]], type:"numpad" };
+  }
   if (m = tok.match(/^LT\((\w+),\s*(KC_\w+)\)$/)) {
     const target = m[1];
     const label = target === "_NUMERIC" ? "Numeric" : target.replace(/^_/,"").toLowerCase().replace(/^./,c=>c.toUpperCase());
