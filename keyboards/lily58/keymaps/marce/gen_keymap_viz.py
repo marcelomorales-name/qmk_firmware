@@ -517,7 +517,7 @@ function labelFor(tok){
   if (tok === "NUM_LAYER") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
   if (tok === "NUM_GRD_F") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
   if (tok === "NUM_GRD_G") return { main:"G", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
-  if (m = tok.match(/^NUMGRID_([1-9])$/)) return { main:m[1], sub:"F-grid", type:"numpad" };
+  if (m = tok.match(/^NUMGRID_([0-9])$/)) return { main:m[1], sub:"F-grid", type:"numpad" };
   if (m = tok.match(/^DIG_([TMB])([LCR])$/)) {
     const rows = { T:"top", M:"mid", B:"bottom" }, cols = { L:"left", C:"center", R:"right" };
     return { main:"⊕", sub:rows[m[1]] + " " + cols[m[2]], type:"numpad" };

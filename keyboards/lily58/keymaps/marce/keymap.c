@@ -36,10 +36,13 @@ enum {
 enum custom_keycodes {
     ALTGR_MC = SAFE_RANGE, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
     // _NUMERIC's numpad-grid cells, numbered 1-9 like the numpad they
-    // stand in for. Handled in process_record_user: plain digit normally,
-    // or an F-key while NUM_GRD_F/NUM_GRD_G is held (see numeric_grid_mode).
-    // Must stay contiguous and in order: process_record_user range-checks them
-    // and derives the digit from the offset.
+    // stand in for, plus 0 (on the right-hand thumb cluster rather than the
+    // grid proper). Handled in process_record_user: plain digit normally, or
+    // an F-key while NUM_GRD_F/NUM_GRD_G is held (see numeric_grid_mode).
+    // Must stay contiguous and in order -- including NUMGRID_0 landing right
+    // after NUMGRID_9 -- since process_record_user range-checks them and
+    // derives the digit from the offset (0 lands at offset 9, i.e. digit 10,
+    // which is exactly the numpad-style F10/F20 it should produce).
     NUMGRID_1,
     NUMGRID_2,
     NUMGRID_3,
@@ -49,6 +52,7 @@ enum custom_keycodes {
     NUMGRID_7,
     NUMGRID_8,
     NUMGRID_9,
+    NUMGRID_0,
     // Hold-vs-tap keys, resolved in process_record_user (see hold_key below).
     NUM_LAYER,  // tap: one-shot _NUMERIC (next key only); hold: momentary _NUMERIC
     NUM_GRD_F,  // tap: F; hold: numeric_grid_mode = GRID_F
@@ -156,11 +160,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // process_record_user); no extra layer needed since it's the same nine
     // physical positions either way.
     // Holding T applies Ctrl+Shift+Gui as a modifier instead of typing T.
+    // 0 sits on the right hand's third thumb key (mirrors KC_RALT's position
+    // on _QWERTY) rather than in the 3x3 grid, same as a numpad's 0 key
+    // living below the grid; it's still a NUMGRID_* cell so NUM_GRD_F/G
+    // retarget it to F10/F20 exactly like the rest.
     [_NUMERIC] = LAYOUT(KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_NUM, KC_SLSH, LSFT(KC_8), KC_MINS, KC_NO, KC_TRNS,      // number row
                         KC_TRNS, LT(_NUMERIC, KC_Q), KC_UP, KC_E, KC_R, MT(MOD_LCTL | MOD_LSFT | MOD_LGUI, KC_T), NUMGRID_7, NUMGRID_8, NUMGRID_9, LSFT(KC_EQL), KC_NO, KC_TRNS, // top row
                         KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, NUM_GRD_F, NUM_GRD_G, NUMGRID_4, NUMGRID_5, NUMGRID_6, KC_COMM, KC_NO, KC_TRNS, // home row
                         KC_TRNS, LCTL_T(KC_Z), LALT_T(KC_X), KC_C, KC_V, KC_B, KC_TRNS, KC_NO, NUMGRID_1, NUMGRID_2, NUMGRID_3, RALT_T(KC_EQL), RCTL_T(KC_NO), KC_TRNS, // bottom row
-                        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS                            // thumbs
+                        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, NUMGRID_0, KC_TRNS                          // thumbs
                         ),
 };
 
@@ -349,8 +357,9 @@ static uint8_t  pending_dead       = DEAD_NONE;
 static uint16_t altgr_swallowed_key = KC_NO;
 
 // Sent per grid cell so release unregisters exactly what press registered,
-// even if numeric_grid_mode changes mid-hold.
-static uint16_t numgrid_sent[9] = {0};
+// even if numeric_grid_mode changes mid-hold. Ten cells: NUMGRID_1..NUMGRID_9
+// plus NUMGRID_0.
+static uint16_t numgrid_sent[10] = {0};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // Any other key going down while a hold-vs-tap key is held settles it as a
@@ -392,13 +401,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
-    if (keycode >= NUMGRID_1 && keycode <= NUMGRID_9) {
+    if (keycode >= NUMGRID_1 && keycode <= NUMGRID_0) {
         uint8_t idx = keycode - NUMGRID_1;
         if (record->event.pressed) {
-            uint8_t  digit = idx + 1;
+            uint8_t  digit = idx + 1; // NUMGRID_0 is idx 9 -> digit 10, giving F10/F20 below
             uint16_t code;
             if (numeric_grid_mode == GRID_NONE) {
-                code = KC_1 + idx; // KC_1..KC_9 are contiguous
+                code = KC_1 + idx; // KC_1..KC_9, KC_0 are contiguous in that order
             } else {
                 uint8_t target = digit + (numeric_grid_mode == GRID_G ? 10 : 0);
                 code            = (target <= 12) ? (KC_F1 + target - 1) : (KC_F13 + target - 13);
