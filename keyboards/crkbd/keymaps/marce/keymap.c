@@ -59,11 +59,8 @@ enum custom_keycodes {
                                // the same time.
 };
 
-// Tap Dance definitions
-tap_dance_action_t tap_dance_actions[] = {
-    // Tap once for Space, twice for Enter
-    [TAP_SPC_ENT] = ACTION_TAP_DANCE_DOUBLE(KC_SPC, KC_ENT),
-};
+// Tap Dance definitions (shared entries live in users/marce/marce.h)
+tap_dance_action_t tap_dance_actions[] = {MARCE_TAP_DANCE_ACTIONS};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY. The extra ex2 column (stacked above each side's

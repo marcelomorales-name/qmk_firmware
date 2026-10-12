@@ -28,6 +28,14 @@ enum {
     TAP_SPC_ENT,
 };
 
+// QMK's keymap introspection requires tap_dance_actions[] itself to be defined
+// in keymap.c, so the shared entries are a macro each keymap expands in its own
+// table (and can extend with board-only entries):
+//     tap_dance_action_t tap_dance_actions[] = {MARCE_TAP_DANCE_ACTIONS};
+#define MARCE_TAP_DANCE_ACTIONS \
+    /* Tap once for Space, twice for Enter */ \
+    [TAP_SPC_ENT] = ACTION_TAP_DANCE_DOUBLE(KC_SPC, KC_ENT),
+
 // Keycodes common to both boards. Each keymap defines its own board-only
 // keycodes in a separate enum starting at MARCE_SAFE_RANGE.
 enum marce_keycodes {
