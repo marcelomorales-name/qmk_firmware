@@ -136,15 +136,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 #ifdef RGB_MATRIX_ENABLE
 static void update_rgb_matrix(uint8_t layer);
-#endif
 
-layer_state_t layer_state_set_user(layer_state_t state) {
-    state = update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST);
-#ifdef RGB_MATRIX_ENABLE
+layer_state_t layer_state_set_marce_kb(layer_state_t state) {
     update_rgb_matrix(get_highest_layer(state));
-#endif
     return state;
 }
+#endif
 
 #ifdef RGB_MATRIX_ENABLE
 // Cool blue while AltGr fakes macOS Unicode input, warm red while it's

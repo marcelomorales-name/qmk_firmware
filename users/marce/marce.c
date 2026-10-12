@@ -277,6 +277,19 @@ static bool process_altgr(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+// --- Layers --------------------------------------------------------------
+
+// Runs after the tri-layer update; a board can override it to react to the new
+// layer state (return the state to use).
+__attribute__((weak)) layer_state_t layer_state_set_marce_kb(layer_state_t state) {
+    return state;
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    // _NUMERIC is deliberately not part of the tri-layer: only LOWER+RAISE.
+    return layer_state_set_marce_kb(update_tri_layer_state(state, _RAISE, _LOWER, _ADJUST));
+}
+
 // --- Hold-vs-tap ---------------------------------------------------------
 
 // See the description in marce.h. hold_key names the key currently down.

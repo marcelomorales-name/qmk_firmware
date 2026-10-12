@@ -55,27 +55,26 @@ Paths (repo root = qmk_firmware):
 - [ ] Hardware check (user): flash both, sanity check layers/keys. Not done by Claude.
 - [x] Commit.
 
-## Phase 3 — Move self-contained subsystems (one commit each)
-For each: move code from LILY to `users/marce/`, delete from both keymaps, build both,
-compare sizes, test on hardware.
-- [ ] 3a. Digitizer: `digitizer_points[]` and the `DIG_*` handler.
-- [ ] 3b. Tap dance: `tap_dance_actions[]`, `TAP_SPC_ENT` callbacks.
-- [ ] 3c. `hold_key_*` helpers (`hold_key_press`, `hold_key_was_tap`).
-- [ ] 3d. AltGr / Mac Unicode subsystem (`altgr_map`, `dead_*`, `send_mac_unicode`,
-      Mac/PC mode state, `ALTGR_MC`). Largest change; crkbd switches to the 16-bit
-      tables here (see Phase 0 decision). Keep `UNICODE_ENABLE` consistent (Lily58 = no,
-      hand-rolled; crkbd = yes) — pick one, ideally the hand-rolled path.
-- [ ] 3e. Layer state: `layer_state_set_user` tri-layer logic, with a weak
-      `layer_state_set_marce_kb(state)` hook so crkbd can call `update_rgb_matrix`.
+## Phase 3 — Move self-contained subsystems (one commit each) — DONE
+- [x] 3a. Digitizer (`digitizer_points[]`, `DIG_*` handler) + shared `process_record_user`
+      dispatcher in marce.c that first calls weak `process_record_marce_kb` (pulled forward
+      from phase 4).
+- [x] 3b. Tap dance: QMK keymap introspection requires `tap_dance_actions[]` to be defined in
+      keymap.c, so it is the `MARCE_TAP_DANCE_ACTIONS` macro in marce.h, expanded per keymap.
+- [x] 3c. `hold_key_press` / `hold_key_was_tap` + interrupt bookkeeping in the dispatcher.
+- [x] 3d. AltGr / Mac Unicode subsystem. crkbd now uses Lily58's table and the hand-rolled
+      send_mac_unicode; `UNICODE_ENABLE` and `set_unicode_input_mode` removed from crkbd.
+      `mac_altgr_mode` is a global (OLED reads it); weak `mac_altgr_mode_changed_marce_kb`
+      lets crkbd recolor RGB on toggle.
+- [x] 3e. Layer state: shared `layer_state_set_user` (tri-layer) + weak
+      `layer_state_set_marce_kb`.
 
-## Phase 4 — Single `process_record_user` dispatcher
-- [ ] `marce.c` `process_record_user` handles shared keycodes, then calls weak
-      `bool process_record_marce_kb(uint16_t, keyrecord_t *)`.
-- [ ] Lily58 keymap implements it for `NUM_LAYER`, `NUM_GRD_F/G`, `NUMGRID_*`.
-- [ ] crkbd keymap implements it for `CW_CTL`, `NUM_MO`, `NUM_OS`.
-- [ ] Preserve ordering semantics: Lily58's `hold_interrupted` bookkeeping must run
-      for every keypress, before board-specific handling.
-- [ ] Same for `matrix_scan_user` (crkbd `CW_CTL` timer) via a weak hook.
+## Phase 4 — Single `process_record_user` dispatcher — DONE (via 3a)
+- [x] Dispatcher: board hook first, then DIG, then AltGr. Hold-interrupt bookkeeping first of all.
+- [x] Lily58 hook: `NUM_LAYER`, `NUM_GRD_F/G`, `NUMGRID_*` (moves to shared in 4b).
+- [x] crkbd hook: `CW_CTL`, `NUM_MO`, `NUM_OS`, `TO(0)`.
+- [x] `matrix_scan_user` (crkbd `CW_CTL` timer) stays in crkbd keymap.c: the shared code
+      doesn't define it, so there is nothing to hook.
 
 ## Phase 4b — Port the NUMGRID F/G overlay to crkbd (layout work)
 - [ ] Design crkbd `_NUMERIC` placement: 3x3 grid on the right hand (rows map 1:1 to
@@ -129,3 +128,4 @@ compare sizes, test on hardware.
   - Phase 0 complete. Next: Phase 1.
 - 2026-10-11: Phase 1 done. Skeleton builds; sizes identical to baseline (lily58 18492 B, crkbd text 52512). Next: Phase 2.
 - 2026-10-11: Phase 2 committed. lily58 18500/28672 B (+8), crkbd unchanged. Hardware check still owed by user. Next: Phase 3a.
+- 2026-10-11: Phase 3 (3a-3e) and Phase 4 done, one commit per step. Sizes: lily58 18500/28672 B, crkbd text 50908 (-1.6 KB from the smaller AltGr table). No hardware testing done. Next: 4b needs a key-placement decision from the user; phases 5-6 can go ahead meanwhile.

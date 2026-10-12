@@ -93,3 +93,5 @@ bool hold_key_was_tap(uint16_t keycode);
 // host), true = Mac (AltGr+key types Unicode itself). Toggled by ALTGR_MC.
 extern bool mac_altgr_mode;
 void        mac_altgr_mode_changed_marce_kb(void);
+
+layer_state_t layer_state_set_marce_kb(layer_state_t state);
