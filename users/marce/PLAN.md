@@ -43,14 +43,17 @@ Paths (repo root = qmk_firmware):
 - [x] Commit: "users/marce: add empty shared userspace".
 
 ## Phase 2 — Shared definitions (header only)
-- [ ] `marce.h`: `enum layers`, `LOWER`/`RAISE` macros, shared `custom_keycodes`
-      (`ALTGR_MC`, `DIG_TL..DIG_BR`), `TAP_SPC_ENT` tap-dance enum.
-- [ ] Board-specific keycodes: each keymap declares its own enum starting at a
+- [x] `marce.h`: `enum layers`, `LOWER`/`RAISE` macros, shared `marce_keycodes`
+      (`ALTGR_MC`, `NUMGRID_1..0`, `NUM_GRD_F/G`, `DIG_TL..DIG_BR`), `TAP_SPC_ENT` enum.
+      NUMGRID/NUM_GRD keycodes are declared here already (decided shared); crkbd just
+      doesn't use them until phase 4b.
+- [x] Board-specific keycodes: each keymap declares its own enum starting at a
       `MARCE_SAFE_RANGE` macro exported by `marce.h`.
-- [ ] Remove the duplicates from both `keymap.c`; keep `_NUMERIC` ordering invariant
+- [x] Remove the duplicates from both `keymap.c`; keep `_NUMERIC` ordering invariant
       (must stay below LOWER/RAISE/ADJUST) and document it in `marce.h`.
-- [ ] Build both, sizes unchanged, flash lily58 and sanity check layers.
-- [ ] Commit.
+- [x] Build both: crkbd identical; lily58 +8 B (keycode values shifted).
+- [ ] Hardware check (user): flash both, sanity check layers/keys. Not done by Claude.
+- [x] Commit.
 
 ## Phase 3 — Move self-contained subsystems (one commit each)
 For each: move code from LILY to `users/marce/`, delete from both keymaps, build both,
@@ -125,3 +128,4 @@ compare sizes, test on hardware.
   - Decisions made: crkbd adopts Lily58 AltGr table, hold_key helpers and NUMGRID F/G overlay.
   - Phase 0 complete. Next: Phase 1.
 - 2026-10-11: Phase 1 done. Skeleton builds; sizes identical to baseline (lily58 18492 B, crkbd text 52512). Next: Phase 2.
+- 2026-10-11: Phase 2 committed. lily58 18500/28672 B (+8), crkbd unchanged. Hardware check still owed by user. Next: Phase 3a.

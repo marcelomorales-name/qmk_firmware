@@ -39,52 +39,24 @@
 // AltGr-Unicode fake layer) is unchanged from the Lily58 source.
 
 #include QMK_KEYBOARD_H
+#include "marce.h"
 
 extern uint8_t is_master;
 
-// _NUMERIC must stay below _LOWER/_RAISE/_ADJUST: QMK resolves keys from the
-// highest active layer down, so LOWER/RAISE held while _NUMERIC is on only
-// overlay it (instead of being shadowed by it) if they outrank it here.
-enum layers {
-    _QWERTY,
-    _NUMERIC,
-    _LOWER,
-    _RAISE,
-    _ADJUST,
-};
-
-// Tap Dance declarations
-enum {
-    TAP_SPC_ENT,
-};
-
-// Digitizer point keys: each moves the digitizer cursor to a fixed absolute
-// position on screen without clicking, mirroring the numpad's spatial layout
-// (7=top-left, 5=center, 3=bottom-right, ...). Order must match
-// digitizer_points[] below.
+// Board-only keycodes; the shared ones live in users/marce/marce.h.
 enum custom_keycodes {
-    DIG_TL = SAFE_RANGE,
-    DIG_TC,
-    DIG_TR,
-    DIG_ML,
-    DIG_MC,
-    DIG_MR,
-    DIG_BL,
-    DIG_BC,
-    DIG_BR,
-    ALTGR_MC, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
-    CW_CTL,   // tap: toggle Caps Word. hold: Ctrl. CW_TOGG isn't a basic
-              // keycode so it can't use the built-in xxxx_T() mod-tap macros;
-              // handled by hand in process_record_user/matrix_scan_user below.
-    NUM_MO,   // hold: momentary _NUMERIC (like a plain MO(_NUMERIC)).
-              // Chords with NUM_OS -- see NUM_OS below.
-    NUM_OS,   // tap: one-shot _NUMERIC for the next keystroke, then back to
-              // whatever was active before. Pressed together with NUM_MO,
-              // the two instead lock _NUMERIC on until it's exited the
-              // normal way (_NUMERIC's own TO(0) key). Custom-rolled
-              // instead of QK_ONE_SHOT_LAYER/QK_MOMENTARY because neither
-              // built-in leaves room for detecting the other being held at
-              // the same time.
+    CW_CTL = MARCE_SAFE_RANGE, // tap: toggle Caps Word. hold: Ctrl. CW_TOGG isn't a basic
+                               // keycode so it can't use the built-in xxxx_T() mod-tap macros;
+                               // handled by hand in process_record_user/matrix_scan_user below.
+    NUM_MO,                    // hold: momentary _NUMERIC (like a plain MO(_NUMERIC)).
+                               // Chords with NUM_OS -- see NUM_OS below.
+    NUM_OS,                    // tap: one-shot _NUMERIC for the next keystroke, then back to
+                               // whatever was active before. Pressed together with NUM_MO,
+                               // the two instead lock _NUMERIC on until it's exited the
+                               // normal way (_NUMERIC's own TO(0) key). Custom-rolled
+                               // instead of QK_ONE_SHOT_LAYER/QK_MOMENTARY because neither
+                               // built-in leaves room for detecting the other being held at
+                               // the same time.
 };
 
 // Tap Dance definitions
@@ -92,9 +64,6 @@ tap_dance_action_t tap_dance_actions[] = {
     // Tap once for Space, twice for Enter
     [TAP_SPC_ENT] = ACTION_TAP_DANCE_DOUBLE(KC_SPC, KC_ENT),
 };
-
-#define RAISE MO(_RAISE)
-#define LOWER MO(_LOWER)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY. The extra ex2 column (stacked above each side's
