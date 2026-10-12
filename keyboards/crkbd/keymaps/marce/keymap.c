@@ -149,19 +149,6 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     return state;
 }
 
-// Absolute screen positions for the DIG_* keys, indexed by keycode - DIG_TL.
-// Order must match the custom_keycodes enum above.
-typedef struct {
-    float x;
-    float y;
-} digitizer_point_t;
-
-static const digitizer_point_t digitizer_points[9] PROGMEM = {
-    {0.05f, 0.05f}, {0.5f, 0.05f}, {0.95f, 0.05f}, // DIG_TL, DIG_TC, DIG_TR
-    {0.05f, 0.5f},  {0.5f, 0.5f},  {0.95f, 0.5f},  // DIG_ML, DIG_MC, DIG_MR
-    {0.05f, 0.95f}, {0.5f, 0.95f}, {0.95f, 0.95f}, // DIG_BL, DIG_BC, DIG_BR
-};
-
 // --- Mac/PC AltGr switch -----------------------------------------------
 //
 // PC mode: KC_RALT behaves exactly as a normal AltGr modifier (today's
@@ -384,7 +371,7 @@ static bool num_os_held  = false; // NUM_OS physically held
 static bool num_locked   = false; // chorded: _NUMERIC stays on regardless of holds
 static bool num_one_shot = false; // NUM_OS-armed one-shot, awaiting the next keystroke
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+bool process_record_marce_kb(uint16_t keycode, keyrecord_t *record) {
     // Consume a pending NUM_OS one-shot the moment any other key is pressed.
     if (num_one_shot && record->event.pressed && keycode != NUM_MO && keycode != NUM_OS) {
         num_one_shot = false;
@@ -524,17 +511,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         return true;
     }
 
-    if (keycode >= DIG_TL && keycode <= DIG_BR) {
-        digitizer_point_t point;
-        memcpy_P(&point, &digitizer_points[keycode - DIG_TL], sizeof(point));
-        if (record->event.pressed) {
-            digitizer_in_range_on();
-            digitizer_set_position(point.x, point.y);
-        } else {
-            digitizer_in_range_off();
-        }
-        return false;
-    }
     return true;
 }
 
