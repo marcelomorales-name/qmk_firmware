@@ -19,11 +19,7 @@ MAGIC_ENABLE = no       # Defaults to yes. No magic keycodes in the keymap.
 SPACE_CADET_ENABLE = no # Defaults to yes. No SC_* in the keymap.
 UNICODE_ENABLE = no     # macOS Unicode Hex Input is hand-rolled in keymap.c.
 
-DIGITIZER_ENABLE = yes  # absolute-position point grid on _ADJUST
-LTO_ENABLE = yes
-MOUSEKEY_ENABLE = yes
 OLED_ENABLE = yes
-TAP_DANCE_ENABLE = yes  # Only TAP_SPC_ENT still needs it.
 
 # Shared logic lives in users/marce/.
 USER_NAME := marce

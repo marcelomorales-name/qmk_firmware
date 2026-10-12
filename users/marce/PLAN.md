@@ -88,14 +88,15 @@ Paths (repo root = qmk_firmware):
 - [ ] Update `gen_keymap_viz.py` labels for the new keys; regenerate `keymap-viz.html`.
 - [ ] Build both, test on hardware, commit.
 
-## Phase 5 — Config, rules, tooling
-- [ ] Move shared `config.h` defines (`SPLIT_LAYER_STATE_ENABLE`, `OLED_TIMEOUT`,
-      `SPLIT_USB_DETECT` if appropriate) into `users/marce/config.h`.
-- [ ] Trim each keymap's `rules.mk` to board-only overrides, with comments saying why.
-- [ ] Update `gen_keymap_viz.py` (both copies) if it parses things that moved; ideally
-      de-duplicate into one script in `users/marce/` with a per-board config.
-- [ ] Optional: drift check script that compares layer *semantics* across boards
-      (which keys exist on each layer) and flags unintended divergence.
+## Phase 5 — Config, rules, tooling — DONE
+- [x] `users/marce/config.h`: `SPLIT_LAYER_STATE_ENABLE`, `OLED_TIMEOUT`. `SPLIT_USB_DETECT`
+      stays in lily58 (Elite-C specific).
+- [x] `users/marce/rules.mk`: DIGITIZER, LTO, MOUSEKEY, TAP_DANCE. NOT `CAPS_WORD_ENABLE`: only
+      crkbd uses it (moving it to shared cost lily58 +380 B). Rule: only share a flag if
+      both boards already set it, and compare sizes.
+- [x] `gen_keymap_viz.py` (both): also reads `enum layers` from users/marce/marce.h.
+      Regenerated HTML is unchanged. Merging the two scripts into one is NOT done (optional).
+- [ ] Optional: drift-check script comparing layer semantics across boards.
 
 ## Phase 6 — Docs
 - [ ] `users/marce/README.md`: what lives where, how to add a feature, weak hook list.
@@ -129,3 +130,4 @@ Paths (repo root = qmk_firmware):
 - 2026-10-11: Phase 1 done. Skeleton builds; sizes identical to baseline (lily58 18492 B, crkbd text 52512). Next: Phase 2.
 - 2026-10-11: Phase 2 committed. lily58 18500/28672 B (+8), crkbd unchanged. Hardware check still owed by user. Next: Phase 3a.
 - 2026-10-11: Phase 3 (3a-3e) and Phase 4 done, one commit per step. Sizes: lily58 18500/28672 B, crkbd text 50908 (-1.6 KB from the smaller AltGr table). No hardware testing done. Next: 4b needs a key-placement decision from the user; phases 5-6 can go ahead meanwhile.
+- 2026-10-11: Phase 5 done. Gotcha: sharing CAPS_WORD_ENABLE grew lily58 by 380 B; keep it crkbd-only. Sizes back to lily58 18500, crkbd 50908.

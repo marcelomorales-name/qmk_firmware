@@ -25,6 +25,8 @@ DEFAULT_KEYMAP_C = HERE / "keymap.c"
 DEFAULT_KEYBOARD_JSON = HERE.parent.parent / "rev4_1" / "info.json"
 DEFAULT_LAYOUT_NAME = "LAYOUT_split_3x6_3_ex2"
 DEFAULT_OUT = HERE / "keymap-viz.html"
+# enum layers lives in the shared userspace header, not in keymap.c.
+SHARED_HEADER = HERE.parents[3] / "users" / "marce" / "marce.h"
 
 LAYER_TITLES = {
     "_QWERTY": ("Qwerty", None, "Base layer. Held modifiers double as layer taps in the thumb cluster."),
@@ -95,6 +97,8 @@ def parse_layer_order(keymap_c: Path) -> "list[str]":
     numbers), not the order they happen to appear in keymaps[] -- the two
     deliberately differ here (see the _NUMERIC-must-stay-below comment)."""
     text = keymap_c.read_text()
+    if SHARED_HEADER.exists():
+        text += "\n" + SHARED_HEADER.read_text()
     m = re.search(r"enum\s+layers\s*\{(.*?)\}", text, re.S)
     if not m:
         sys.exit(f"error: could not find 'enum layers {{ ... }}' in {keymap_c}")
