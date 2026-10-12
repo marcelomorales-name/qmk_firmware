@@ -88,3 +88,8 @@ enum marce_keycodes {
 // release test hold_key_was_tap(keycode) to decide whether to emit the tap.
 void hold_key_press(uint16_t keycode);
 bool hold_key_was_tap(uint16_t keycode);
+
+// Mac/PC AltGr switch (see marce.c): false = PC (AltGr passes straight to the
+// host), true = Mac (AltGr+key types Unicode itself). Toggled by ALTGR_MC.
+extern bool mac_altgr_mode;
+void        mac_altgr_mode_changed_marce_kb(void);
