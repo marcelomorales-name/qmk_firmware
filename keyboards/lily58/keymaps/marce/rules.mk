@@ -24,3 +24,6 @@ LTO_ENABLE = yes
 MOUSEKEY_ENABLE = yes
 OLED_ENABLE = yes
 TAP_DANCE_ENABLE = yes  # Only TAP_SPC_ENT still needs it.
+
+# Shared logic lives in users/marce/.
+USER_NAME := marce
