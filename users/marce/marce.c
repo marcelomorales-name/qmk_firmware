@@ -31,6 +31,28 @@ static bool process_digitizer(uint16_t keycode, keyrecord_t *record) {
     return false;
 }
 
+// --- Hold-vs-tap ---------------------------------------------------------
+
+// See the description in marce.h. hold_key names the key currently down.
+static uint16_t hold_key         = KC_NO;
+static uint16_t hold_timer       = 0;
+static bool     hold_interrupted = false;
+
+void hold_key_press(uint16_t keycode) {
+    hold_key         = keycode;
+    hold_timer       = timer_read();
+    hold_interrupted = false;
+}
+
+// True when this release should be treated as a tap rather than a hold.
+bool hold_key_was_tap(uint16_t keycode) {
+    bool tapped = (hold_key == keycode) && !hold_interrupted && timer_elapsed(hold_timer) < TAPPING_TERM;
+    if (hold_key == keycode) {
+        hold_key = KC_NO;
+    }
+    return tapped;
+}
+
 // --- Dispatcher ----------------------------------------------------------
 
 // Board-specific keycodes are handled here first; return false to swallow the
@@ -40,6 +62,12 @@ __attribute__((weak)) bool process_record_marce_kb(uint16_t keycode, keyrecord_t
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // Any other key going down while a hold-vs-tap key is held settles it as a
+    // hold, so its release won't emit the tap action.
+    if (record->event.pressed && hold_key != KC_NO && keycode != hold_key) {
+        hold_interrupted = true;
+    }
+
     if (!process_record_marce_kb(keycode, record)) {
         return false;
     }

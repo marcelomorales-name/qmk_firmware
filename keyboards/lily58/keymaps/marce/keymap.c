@@ -21,34 +21,9 @@
 
 // Board-only keycodes; the shared ones live in users/marce/marce.h.
 enum custom_keycodes {
-    // Hold-vs-tap key, resolved in process_record_user (see hold_key below).
+    // Hold-vs-tap key, resolved in process_record_user (see hold_key_press in users/marce/marce.h).
     NUM_LAYER = MARCE_SAFE_RANGE, // tap: one-shot _NUMERIC (next key only); hold: momentary _NUMERIC
 };
-
-// Hold-vs-tap without tap dance. Pressing arms the hold behavior immediately;
-// the release decides whether it was really a tap -- short, and with no other
-// key pressed in between -- and only then emits the tap action. That needs no
-// callback pair and no tap_dance_actions[] entry per key, and it drops the
-// hold's start latency as a bonus. hold_key names the key currently down, so a
-// release that arrives after a different hold key took over emits nothing.
-static uint16_t hold_key         = KC_NO;
-static uint16_t hold_timer       = 0;
-static bool     hold_interrupted = false;
-
-static void hold_key_press(uint16_t keycode) {
-    hold_key         = keycode;
-    hold_timer       = timer_read();
-    hold_interrupted = false;
-}
-
-// True when this release should be treated as a tap rather than a hold.
-static bool hold_key_was_tap(uint16_t keycode) {
-    bool tapped = (hold_key == keycode) && !hold_interrupted && timer_elapsed(hold_timer) < TAPPING_TERM;
-    if (hold_key == keycode) {
-        hold_key = KC_NO;
-    }
-    return tapped;
-}
 
 // Holding F or G on _NUMERIC retargets the numpad grid (NUMGRID_1..9) to
 // F-keys instead of switching layers: GRID_NONE types plain digits,
@@ -295,12 +270,6 @@ static uint16_t altgr_swallowed_key = KC_NO;
 static uint16_t numgrid_sent[10] = {0};
 
 bool process_record_marce_kb(uint16_t keycode, keyrecord_t *record) {
-    // Any other key going down while a hold-vs-tap key is held settles it as a
-    // hold, so its release won't emit the tap action.
-    if (record->event.pressed && hold_key != KC_NO && keycode != hold_key) {
-        hold_interrupted = true;
-    }
-
     switch (keycode) {
         case NUM_LAYER:
             if (record->event.pressed) {

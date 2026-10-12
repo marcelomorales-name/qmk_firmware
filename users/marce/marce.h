@@ -75,3 +75,16 @@ enum marce_keycodes {
     DIG_BR,
     MARCE_SAFE_RANGE, // first keycode available to a board's own enum
 };
+
+// Hold-vs-tap without tap dance. Pressing arms the hold behavior immediately;
+// the release decides whether it was really a tap -- short, and with no other
+// key pressed in between -- and only then emits the tap action. That needs no
+// callback pair and no tap_dance_actions[] entry per key, and it drops the
+// hold's start latency as a bonus. The dispatcher in marce.c marks the armed
+// key as interrupted when any other key goes down, so a release that arrives
+// after a different hold key took over emits nothing.
+//
+// Usage from a keycode handler: call hold_key_press(keycode) on press, and on
+// release test hold_key_was_tap(keycode) to decide whether to emit the tap.
+void hold_key_press(uint16_t keycode);
+bool hold_key_was_tap(uint16_t keycode);
