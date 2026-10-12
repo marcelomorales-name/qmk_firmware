@@ -35,8 +35,8 @@
 //     stay reachable without a layer shift.
 //   - The digitizer 3x3 grid on _ADJUST maps 1:1 onto Corne's 3 physical
 //     rows now (top/mid/bottom), instead of being squeezed into 2 rows.
-// Everything else (layer structure, tap dance, digitizer logic, the Mac/PC
-// AltGr-Unicode fake layer) is unchanged from the Lily58 source.
+// Layer structure, tap dance, digitizer logic and the Mac/PC AltGr-Unicode
+// fake layer are shared with the Lily58 keymap via users/marce/.
 
 #include QMK_KEYBOARD_H
 #include "marce.h"

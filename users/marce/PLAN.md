@@ -98,12 +98,10 @@ Paths (repo root = qmk_firmware):
       Regenerated HTML is unchanged. Merging the two scripts into one is NOT done (optional).
 - [ ] Optional: drift-check script comparing layer semantics across boards.
 
-## Phase 6 — Docs
-- [ ] `users/marce/README.md`: what lives where, how to add a feature, weak hook list.
-- [ ] Update `lily58/keymaps/marce/CLAUDE.md` architecture section; add a matching
-      `crkbd/keymaps/marce/CLAUDE.md`.
-- [ ] Move the "Deliberate changes" comment block from crkbd `keymap.c` into the crkbd
-      CLAUDE.md as a Lily58→Corne mapping table (rows, absent keys, replaced keys).
+## Phase 6 — Docs — DONE
+- [x] `users/marce/README.md`: what lives where, hooks, rules to keep.
+- [x] Lily58 CLAUDE.md updated (also: build commands, tap dance, Caps Word claim removed).
+- [x] New crkbd CLAUDE.md with the Lily58 -> Corne mapping table.
 
 ## Verification checklist (run after every phase)
 - [ ] `qmk compile` for lily58/rev1 and crkbd/rev4_1/standard build with no warnings
@@ -131,3 +129,4 @@ Paths (repo root = qmk_firmware):
 - 2026-10-11: Phase 2 committed. lily58 18500/28672 B (+8), crkbd unchanged. Hardware check still owed by user. Next: Phase 3a.
 - 2026-10-11: Phase 3 (3a-3e) and Phase 4 done, one commit per step. Sizes: lily58 18500/28672 B, crkbd text 50908 (-1.6 KB from the smaller AltGr table). No hardware testing done. Next: 4b needs a key-placement decision from the user; phases 5-6 can go ahead meanwhile.
 - 2026-10-11: Phase 5 done. Gotcha: sharing CAPS_WORD_ENABLE grew lily58 by 380 B; keep it crkbd-only. Sizes back to lily58 18500, crkbd 50908.
+- 2026-10-11: Phase 6 done. REMAINING: 4b (needs the user's key-placement decision), hardware checks (nothing flashed), optional viz-script merge / drift check.
