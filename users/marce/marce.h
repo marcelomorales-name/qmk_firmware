@@ -40,6 +40,9 @@ enum {
 // keycodes in a separate enum starting at MARCE_SAFE_RANGE.
 enum marce_keycodes {
     ALTGR_MC = SAFE_RANGE, // toggles AltGr between PC-passthrough and Mac Unicode-fake modes
+    NUM_LAYER, // tap: one-shot _NUMERIC (next key only); hold: momentary _NUMERIC.
+               // Shared since 4b: crkbd used to have its own NUM_MO/NUM_OS pair
+               // for the same two behaviors (plus a two-key lock, now dropped).
     // _NUMERIC's numpad-grid cells, numbered 1-9 like the numpad they
     // stand in for, plus 0 (on a thumb key rather than the grid proper).
     // Handled in process_record_user: plain digit normally, or an F-key

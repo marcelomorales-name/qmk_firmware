@@ -19,17 +19,8 @@
 #include QMK_KEYBOARD_H
 #include "marce.h"
 
-// Board-only keycodes; the shared ones live in users/marce/marce.h.
-enum custom_keycodes {
-    // Hold-vs-tap key, resolved in process_record_user (see hold_key_press in users/marce/marce.h).
-    NUM_LAYER = MARCE_SAFE_RANGE, // tap: one-shot _NUMERIC (next key only); hold: momentary _NUMERIC
-};
-
-// Holding F or G on _NUMERIC retargets the numpad grid (NUMGRID_1..9) to
-// F-keys instead of switching layers: GRID_NONE types plain digits,
-// GRID_F/GRID_G pick the F1-F9/F11-F19 bank (see process_record_user).
-enum { GRID_NONE = 0, GRID_F, GRID_G };
-static uint8_t numeric_grid_mode = GRID_NONE;
+// No board-only keycodes on lily58: everything it uses (NUM_LAYER,
+// NUM_GRD_F/G, NUMGRID_*, DIG_*, ALTGR_MC) is shared, see users/marce/marce.h.
 
 // Tap Dance definitions (shared entries live in users/marce/marce.h)
 tap_dance_action_t tap_dance_actions[] = {MARCE_TAP_DANCE_ACTIONS};
@@ -93,68 +84,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                         KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, NUMGRID_0, KC_TRNS                          // thumbs
                         ),
 };
-
-// Sent per grid cell so release unregisters exactly what press registered,
-// even if numeric_grid_mode changes mid-hold. Ten cells: NUMGRID_1..NUMGRID_9
-// plus NUMGRID_0.
-static uint16_t numgrid_sent[10] = {0};
-
-bool process_record_marce_kb(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case NUM_LAYER:
-            if (record->event.pressed) {
-                hold_key_press(keycode);
-                layer_on(_NUMERIC);
-            } else {
-                layer_off(_NUMERIC);
-                if (hold_key_was_tap(keycode)) {
-                    set_oneshot_layer(_NUMERIC, ONESHOT_START);
-                }
-            }
-            return false;
-
-        case NUM_GRD_F:
-        case NUM_GRD_G: {
-            uint8_t mine = (keycode == NUM_GRD_F) ? GRID_F : GRID_G;
-            if (record->event.pressed) {
-                hold_key_press(keycode);
-                numeric_grid_mode = mine;
-            } else {
-                // Only clear if we still own the mode: if the other grid key
-                // took over mid-hold, it owns it now and gets to clear it.
-                if (numeric_grid_mode == mine) {
-                    numeric_grid_mode = GRID_NONE;
-                }
-                if (hold_key_was_tap(keycode)) {
-                    tap_code(keycode == NUM_GRD_F ? KC_F : KC_G);
-                }
-            }
-            return false;
-        }
-    }
-
-    if (keycode >= NUMGRID_1 && keycode <= NUMGRID_0) {
-        uint8_t idx = keycode - NUMGRID_1;
-        if (record->event.pressed) {
-            uint8_t  digit = idx + 1; // NUMGRID_0 is idx 9 -> digit 10, giving F10/F20 below
-            uint16_t code;
-            if (numeric_grid_mode == GRID_NONE) {
-                code = KC_1 + idx; // KC_1..KC_9, KC_0 are contiguous in that order
-            } else {
-                uint8_t target = digit + (numeric_grid_mode == GRID_G ? 10 : 0);
-                code            = (target <= 12) ? (KC_F1 + target - 1) : (KC_F13 + target - 13);
-            }
-            numgrid_sent[idx] = code;
-            register_code16(code);
-        } else if (numgrid_sent[idx]) {
-            unregister_code16(numgrid_sent[idx]);
-            numgrid_sent[idx] = 0;
-        }
-        return false;
-    }
-
-    return true;
-}
 
 // SSD1306 OLED update loop, make sure to enable OLED_ENABLE=yes in rules.mk
 #ifdef OLED_ENABLE

@@ -312,6 +312,83 @@ bool hold_key_was_tap(uint16_t keycode) {
     return tapped;
 }
 
+// --- Numeric grid overlay --------------------------------------------------
+//
+// NUM_LAYER: tap enters _NUMERIC as a one-shot (next keystroke only), hold as
+// momentary (released on key-up). Both boards now use this single entry
+// keycode -- crkbd used to have NUM_MO/NUM_OS, a two-key chord for the same
+// two behaviors plus a lock-on; the lock-on is gone (TO(_NUMERIC)'s own
+// _NUMERIC-layer exit key still works for a "stay until I leave" feel).
+//
+// NUM_GRD_F / NUM_GRD_G: holding F or G on _NUMERIC retargets the 3x3
+// NUMGRID_* grid (plus NUMGRID_0) to F-keys instead of digits: GRID_NONE
+// types plain digits, GRID_F/GRID_G pick the F1-F9/F11-F19 bank (F10/F20 for
+// the 0 cell, since it's digit 10 -- see the offset comment in marce.h).
+enum { GRID_NONE = 0, GRID_F, GRID_G };
+static uint8_t numeric_grid_mode = GRID_NONE;
+
+// Sent per grid cell so release unregisters exactly what press registered,
+// even if numeric_grid_mode changes mid-hold. Ten cells: NUMGRID_1..NUMGRID_9
+// plus NUMGRID_0.
+static uint16_t numgrid_sent[10] = {0};
+
+static bool process_numeric_grid(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case NUM_LAYER:
+            if (record->event.pressed) {
+                hold_key_press(keycode);
+                layer_on(_NUMERIC);
+            } else {
+                layer_off(_NUMERIC);
+                if (hold_key_was_tap(keycode)) {
+                    set_oneshot_layer(_NUMERIC, ONESHOT_START);
+                }
+            }
+            return false;
+
+        case NUM_GRD_F:
+        case NUM_GRD_G: {
+            uint8_t mine = (keycode == NUM_GRD_F) ? GRID_F : GRID_G;
+            if (record->event.pressed) {
+                hold_key_press(keycode);
+                numeric_grid_mode = mine;
+            } else {
+                // Only clear if we still own the mode: if the other grid key
+                // took over mid-hold, it owns it now and gets to clear it.
+                if (numeric_grid_mode == mine) {
+                    numeric_grid_mode = GRID_NONE;
+                }
+                if (hold_key_was_tap(keycode)) {
+                    tap_code(keycode == NUM_GRD_F ? KC_F : KC_G);
+                }
+            }
+            return false;
+        }
+    }
+
+    if (keycode >= NUMGRID_1 && keycode <= NUMGRID_0) {
+        uint8_t idx = keycode - NUMGRID_1;
+        if (record->event.pressed) {
+            uint8_t  digit = idx + 1; // NUMGRID_0 is idx 9 -> digit 10, giving F10/F20 above
+            uint16_t code;
+            if (numeric_grid_mode == GRID_NONE) {
+                code = KC_1 + idx; // KC_1..KC_9, KC_0 are contiguous in that order
+            } else {
+                uint8_t target = digit + (numeric_grid_mode == GRID_G ? 10 : 0);
+                code            = (target <= 12) ? (KC_F1 + target - 1) : (KC_F13 + target - 13);
+            }
+            numgrid_sent[idx] = code;
+            register_code16(code);
+        } else if (numgrid_sent[idx]) {
+            unregister_code16(numgrid_sent[idx]);
+            numgrid_sent[idx] = 0;
+        }
+        return false;
+    }
+
+    return true;
+}
+
 // --- Dispatcher ----------------------------------------------------------
 
 // Board-specific keycodes are handled here first; return false to swallow the
@@ -328,6 +405,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     if (!process_record_marce_kb(keycode, record)) {
+        return false;
+    }
+
+    if (!process_numeric_grid(keycode, record)) {
         return false;
     }
 

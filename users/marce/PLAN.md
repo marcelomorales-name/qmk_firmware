@@ -76,17 +76,23 @@ Paths (repo root = qmk_firmware):
 - [x] `matrix_scan_user` (crkbd `CW_CTL` timer) stays in crkbd keymap.c: the shared code
       doesn't define it, so there is nothing to hook.
 
-## Phase 4b — Port the NUMGRID F/G overlay to crkbd (layout work)
-- [ ] Design crkbd `_NUMERIC` placement: 3x3 grid on the right hand (rows map 1:1 to
-      Corne rows), `NUMGRID_0` on a thumb or bottom-row key, `NUM_GRD_F`/`NUM_GRD_G` on
-      left-hand home-row keys (as on Lily58: F/G positions). Agree on it with the user
-      BEFORE editing; it replaces `KC_P7..P0`, `KC_PDOT`, `KC_PEQL` etc.
-- [ ] Keep crkbd's entry keys (`NUM_MO`/`NUM_OS`, `TO(0)`) working; decide whether
-      `NUM_LAYER`'s tap-one-shot/hold-momentary (Lily58) replaces `NUM_MO`/`NUM_OS` or both stay.
-- [ ] Move `NUMGRID_*`, `NUM_GRD_F/G`, `numeric_grid_mode`, `numgrid_sent[]` and their handling
-      into `users/marce/` (now shared, no longer Lily58-only), gated by nothing.
-- [ ] Update `gen_keymap_viz.py` labels for the new keys; regenerate `keymap-viz.html`.
-- [ ] Build both, test on hardware, commit.
+## Phase 4b — Port the NUMGRID F/G overlay to crkbd (layout work) — DONE
+- [x] Design agreed with the user: the 3x3 grid maps 1:1 onto Corne's existing `KC_P7..P1`
+      spots (rows already align 1:1 with Corne's physical rows); `NUMGRID_0` replaces
+      `KC_P0`, already on the right outer thumb key, so no placement change there.
+      `NUM_GRD_F`/`NUM_GRD_G` go on the home row's operator column (same physical spot as
+      Lily58's F/G), displacing `KC_PAST` up to the top row next to `KC_PSLS`. `KC_PPLS`/
+      `KC_PMNS`/`KC_PEQL`/`KC_PDOT` are untouched (not part of the grid).
+- [x] DECIDED: `NUM_LAYER` (shared tap-one-shot/hold-momentary) replaces `NUM_MO`/`NUM_OS`.
+      The lock-on chord is gone; `TO(0)` still works as a plain exit. `NUM_LAYER` takes the
+      old `NUM_MO` ex2 slot (top row, left); the old `NUM_OS` ex2 slot (right) is now `KC_NO`.
+- [x] Moved `NUM_LAYER`, `NUMGRID_*`, `NUM_GRD_F/G`, `numeric_grid_mode`, `numgrid_sent[]` and
+      their handling into `users/marce/marce.c` (`process_numeric_grid`), called from the
+      shared dispatcher. Lily58's `keymap.c` no longer has any board-only keycodes or a
+      `process_record_marce_kb` override at all.
+- [x] Updated `gen_keymap_viz.py` labels (both boards) for `NUM_LAYER`/`NUM_GRD_F/G`/
+      `NUMGRID_*`; regenerated both `keymap-viz.html`.
+- [x] Built both (see progress log for sizes). Hardware test still owed by the user.
 
 ## Phase 5 — Config, rules, tooling — DONE
 - [x] `users/marce/config.h`: `SPLIT_LAYER_STATE_ENABLE`, `OLED_TIMEOUT`. `SPLIT_USB_DETECT`
@@ -130,3 +136,8 @@ Paths (repo root = qmk_firmware):
 - 2026-10-11: Phase 3 (3a-3e) and Phase 4 done, one commit per step. Sizes: lily58 18500/28672 B, crkbd text 50908 (-1.6 KB from the smaller AltGr table). No hardware testing done. Next: 4b needs a key-placement decision from the user; phases 5-6 can go ahead meanwhile.
 - 2026-10-11: Phase 5 done. Gotcha: sharing CAPS_WORD_ENABLE grew lily58 by 380 B; keep it crkbd-only. Sizes back to lily58 18500, crkbd 50908.
 - 2026-10-11: Phase 6 done. REMAINING: 4b (needs the user's key-placement decision), hardware checks (nothing flashed), optional viz-script merge / drift check.
+- 2026-10-15: Phase 4b done. User chose: F/G displace `KC_PAST` (moved to top row) to match Lily58 exactly;
+  `NUM_LAYER` unifies `NUM_MO`/`NUM_OS` (lock-on chord dropped). `NUMGRID_*`/`NUM_GRD_F/G`/`numeric_grid_mode`/
+  `numgrid_sent[]` moved into `users/marce/marce.c`; lily58's `keymap.c` now has zero board-only keycodes.
+  Sizes: lily58 18498/28672 B (unchanged), crkbd text 51012 B (+104 from baseline, not a concern on RP2040).
+  Both build clean. REMAINING: hardware checks (nothing flashed), optional viz-script merge / drift check.

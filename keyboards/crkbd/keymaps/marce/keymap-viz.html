@@ -325,8 +325,8 @@ const LAYERS = {
     "KC_E",
     "KC_R",
     "KC_T",
-    "NUM_MO",
-    "NUM_OS",
+    "NUM_LAYER",
+    "KC_NO",
     "KC_Y",
     "KC_U",
     "KC_I",
@@ -371,13 +371,13 @@ const LAYERS = {
     "KC_NO",
     "KC_UP",
     "KC_NO",
-    "KC_NO",
+    "KC_PAST",
     "KC_PSLS",
     "KC_NO",
     "KC_NO",
-    "KC_P7",
-    "KC_P8",
-    "KC_P9",
+    "NUMGRID_7",
+    "NUMGRID_8",
+    "NUMGRID_9",
     "KC_PPLS",
     "KC_NO",
     "KC_TRNS",
@@ -385,13 +385,13 @@ const LAYERS = {
     "KC_LEFT",
     "KC_DOWN",
     "KC_RGHT",
-    "KC_NO",
-    "KC_PAST",
+    "NUM_GRD_F",
+    "NUM_GRD_G",
     "TO(0)",
     "KC_NO",
-    "KC_P4",
-    "KC_P5",
-    "KC_P6",
+    "NUMGRID_4",
+    "NUMGRID_5",
+    "NUMGRID_6",
     "KC_PMNS",
     "KC_NO",
     "KC_TRNS",
@@ -401,9 +401,9 @@ const LAYERS = {
     "KC_NO",
     "KC_NO",
     "KC_PEQL",
-    "KC_P1",
-    "KC_P2",
-    "KC_P3",
+    "NUMGRID_1",
+    "NUMGRID_2",
+    "NUMGRID_3",
     "KC_PDOT",
     "KC_RCTL",
     "KC_RSFT",
@@ -412,7 +412,7 @@ const LAYERS = {
     "KC_SPC",
     "KC_ENT",
     "RAISE",
-    "KC_P0"
+    "NUMGRID_0"
   ],
   "_LOWER": [
     "KC_TRNS",
@@ -583,6 +583,10 @@ function labelFor(tok){
   if (m = tok.match(/^RCTL_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Ctrl", type:"dual" };
   if (m = tok.match(/^RSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
+  if (tok === "NUM_LAYER") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_GRD_F") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_GRD_G") return { main:"G", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (m = tok.match(/^NUMGRID_([0-9])$/)) return { main:m[1], sub:"F-grid", type:"numpad" };
   if (tok === "LOWER") return { main:"Lower", sub:"", type:"layer", hue:"var(--hue-lower)" };
   if (tok === "RAISE") return { main:"Raise", sub:"", type:"layer", hue:"var(--hue-raise)" };
   if (m = tok.match(/^TO\((\w+)\)$/)) {

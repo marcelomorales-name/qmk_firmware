@@ -23,10 +23,13 @@
 // innermost thumb key. Deliberate changes made during the port:
 //   - The number row is gone; 1-0, [, ], -, and = all live on _LOWER
 //     instead (top row: numbers/-/=, home row: [/]).
-//   - The ex2 columns carry _NUMERIC-layer access (top row, via the custom
-//     NUM_MO/NUM_OS keycodes -- see their declaration for details) and
-//     repeat/alt repeat (home row, closest to the thumbs) directly on the
-//     base layer.
+//   - The top-row ex2 column (left side) carries _NUMERIC-layer access via
+//     the shared NUM_LAYER keycode (same tap-one-shot/hold-momentary key as
+//     Lily58; crkbd used to have its own NUM_MO/NUM_OS pair here plus a
+//     lock-on chord -- dropped in favor of the shared key, see PLAN.md
+//     phase 4b). The right-side ex2 column it used to share with NUM_OS is
+//     now free (KC_NO). The home-row ex2 columns still carry repeat/alt
+//     repeat directly on the base layer.
 //   - Backslash is gone from the base layer (freed up for Backspace on the
 //     top-row outer key); still reachable via _LOWER's home row.
 //   - Ctrl is no longer a dedicated thumb key (only 3 thumb keys/side, and
@@ -35,28 +38,27 @@
 //     stay reachable without a layer shift.
 //   - The digitizer 3x3 grid on _ADJUST maps 1:1 onto Corne's 3 physical
 //     rows now (top/mid/bottom), instead of being squeezed into 2 rows.
-// Layer structure, tap dance, digitizer logic and the Mac/PC AltGr-Unicode
-// fake layer are shared with the Lily58 keymap via users/marce/.
+//   - _NUMERIC's numpad is the shared NUMGRID_1..9,0 grid (number-row digits,
+//     not real numpad keycodes, so host Num Lock state doesn't matter) with
+//     NUM_GRD_F/NUM_GRD_G retargeting it to F-keys -- same as Lily58, and in
+//     the same physical spots: the grid itself maps 1:1 onto where KC_P1..9
+//     used to sit, and F/G land on the home row's operator column, which
+//     bumped the numpad's "*" key up to the top row (see _NUMERIC below).
+// Layer structure, tap dance, digitizer logic, the numeric grid overlay and
+// the Mac/PC AltGr-Unicode fake layer are shared with the Lily58 keymap via
+// users/marce/.
 
 #include QMK_KEYBOARD_H
 #include "marce.h"
 
 extern uint8_t is_master;
 
-// Board-only keycodes; the shared ones live in users/marce/marce.h.
+// Board-only keycodes; the shared ones (including NUM_LAYER as of phase 4b)
+// live in users/marce/marce.h.
 enum custom_keycodes {
     CW_CTL = MARCE_SAFE_RANGE, // tap: toggle Caps Word. hold: Ctrl. CW_TOGG isn't a basic
                                // keycode so it can't use the built-in xxxx_T() mod-tap macros;
                                // handled by hand in process_record_user/matrix_scan_user below.
-    NUM_MO,                    // hold: momentary _NUMERIC (like a plain MO(_NUMERIC)).
-                               // Chords with NUM_OS -- see NUM_OS below.
-    NUM_OS,                    // tap: one-shot _NUMERIC for the next keystroke, then back to
-                               // whatever was active before. Pressed together with NUM_MO,
-                               // the two instead lock _NUMERIC on until it's exited the
-                               // normal way (_NUMERIC's own TO(0) key). Custom-rolled
-                               // instead of QK_ONE_SHOT_LAYER/QK_MOMENTARY because neither
-                               // built-in leaves room for detecting the other being held at
-                               // the same time.
 };
 
 // Tap Dance definitions (shared entries live in users/marce/marce.h)
@@ -64,10 +66,11 @@ tap_dance_action_t tap_dance_actions[] = {MARCE_TAP_DANCE_ACTIONS};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY. The extra ex2 column (stacked above each side's
-    // innermost thumb key) carries _NUMERIC access (top row -- see NUM_MO/
-    // NUM_OS above) and repeat/alt repeat (home row, closest to the
+    // innermost thumb key) carries _NUMERIC access (top row, left side only
+    // now -- see NUM_LAYER in users/marce/marce.h; the right side's top-row
+    // ex2 slot is free) and repeat/alt repeat (home row, closest to the
     // thumbs), no LOWER needed.
-    [_QWERTY] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, NUM_MO, NUM_OS, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                      // top row
+    [_QWERTY] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, NUM_LAYER, KC_NO, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                    // top row
                                        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT), // home row
                                        LSFT_T(KC_GRV), LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,                      // bottom row
                                        KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT                                                                   // thumbs
@@ -106,12 +109,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                        KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO                                                                                 // thumbs
                                        ),
 
-    // Numeric layer: numpad on the right hand, arrows on the left, entered/
-    // exited via TO(_NUMERIC)/TO(0) (TO(0) sits on the home row's left
-    // ex2 key, one step in from TAB's top-left corner, so the outer
-    // columns can stay identical to every other layer). The numpad's
-    // operator column (/,*,-) moved one column left onto the left hand,
-    // right next to the arrow column, and
+    // Numeric layer: the shared NUMGRID_1..9,0 grid on the right hand (number-
+    // row digits, not real numpad keycodes, so host Num Lock doesn't matter),
+    // arrows on the left, entered/exited via NUM_LAYER/TO(_NUMERIC)/TO(0)
+    // (TO(0) sits on the home row's left ex2 key, one step in from TAB's
+    // top-left corner, so the outer columns can stay identical to every
+    // other layer). NUM_GRD_F/NUM_GRD_G (hold -> retarget the grid to F-keys,
+    // tap -> F/G) sit on the home row's operator column, exactly where
+    // Lily58 puts them (physically F/G on the base layer): KC_PAST(*), which
+    // used to live there, moved up to the top row next to KC_PSLS(/) so the
+    // two still read together. KC_PPLS/KC_PMNS/KC_PEQL stay put (not part of
+    // the grid -- only the nine numbered cells get the F/G overlay).
     // KC_BSPC swapped places with KC_PEQL/KC_RCTL -- it now sits on the
     // left hand's innermost column (right where the 9/6/3 column used to
     // be), so 7/8/9, 4/5/6, and 1/2/3 can each read left-to-right on the
@@ -122,15 +130,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Shift -- via the base layer's LSFT_T(KC_GRV) -- still lands there),
     // with RCTL flanking KC_PDOT on the right. LOWER/RAISE stay held-only
     // escapes back to those layers, returning to _NUMERIC on release. The
-    // left outer thumb key falls through to base layer's Alt; the right
-    // one is KC_P0 instead (below KC_PDOT, which sits in the same spot as
-    // KC_DOT on the base layer). Every row's first and last column is now
-    // either literally identical to the base layer or KC_TRNS falling
-    // through to it, matching every other layer.
-    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_NO, KC_UP, KC_NO, KC_NO, KC_PSLS, KC_NO, KC_NO, KC_P7, KC_P8, KC_P9, KC_PPLS, KC_NO, KC_TRNS,        // top row
-                                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, KC_NO, KC_PAST, TO(0), KC_NO, KC_P4, KC_P5, KC_P6, KC_PMNS, KC_NO, KC_TRNS, // home row
-                                        KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, KC_P1, KC_P2, KC_P3, KC_PDOT, KC_RCTL, KC_RSFT,               // bottom row
-                                        KC_TRNS, LOWER, KC_SPC, KC_ENT, RAISE, KC_P0                                                                    // thumbs
+    // left outer thumb key falls through to base layer's Alt; the right one
+    // is NUMGRID_0 instead (below KC_PDOT, which sits in the same spot as
+    // KC_DOT on the base layer) -- the same thumb key KC_P0 used to occupy,
+    // so no placement change there, just a different keycode. Every row's
+    // first and last column is now either literally identical to the base
+    // layer or KC_TRNS falling through to it, matching every other layer.
+    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_NO, KC_UP, KC_NO, KC_PAST, KC_PSLS, KC_NO, KC_NO, NUMGRID_7, NUMGRID_8, NUMGRID_9, KC_PPLS, KC_NO, KC_TRNS,             // top row
+                                        KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, NUM_GRD_F, NUM_GRD_G, TO(0), KC_NO, NUMGRID_4, NUMGRID_5, NUMGRID_6, KC_PMNS, KC_NO, KC_TRNS, // home row
+                                        KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, NUMGRID_1, NUMGRID_2, NUMGRID_3, KC_PDOT, KC_RCTL, KC_RSFT,                     // bottom row
+                                        KC_TRNS, LOWER, KC_SPC, KC_ENT, RAISE, NUMGRID_0                                                                                  // thumbs
                                         ),
 };
 
@@ -180,62 +189,7 @@ void matrix_scan_user(void) {
     }
 }
 
-// --- NUM_MO / NUM_OS: _NUMERIC access from the old volume keys ---------
-static bool num_mo_held  = false; // NUM_MO physically held
-static bool num_os_held  = false; // NUM_OS physically held
-static bool num_locked   = false; // chorded: _NUMERIC stays on regardless of holds
-static bool num_one_shot = false; // NUM_OS-armed one-shot, awaiting the next keystroke
-
 bool process_record_marce_kb(uint16_t keycode, keyrecord_t *record) {
-    // Consume a pending NUM_OS one-shot the moment any other key is pressed.
-    if (num_one_shot && record->event.pressed && keycode != NUM_MO && keycode != NUM_OS) {
-        num_one_shot = false;
-        if (!num_locked && !num_mo_held) {
-            layer_off(_NUMERIC);
-        }
-    }
-
-    if (keycode == NUM_MO) {
-        if (record->event.pressed) {
-            num_mo_held = true;
-            if (num_os_held) {
-                num_locked   = true;
-                num_one_shot = false;
-            }
-            layer_on(_NUMERIC);
-        } else {
-            num_mo_held = false;
-            if (!num_locked) {
-                layer_off(_NUMERIC);
-            }
-        }
-        return false;
-    }
-
-    if (keycode == NUM_OS) {
-        if (record->event.pressed) {
-            num_os_held = true;
-            if (num_mo_held) {
-                num_locked   = true;
-                num_one_shot = false;
-            } else {
-                num_one_shot = true;
-            }
-            layer_on(_NUMERIC);
-        } else {
-            num_os_held = false;
-        }
-        return false;
-    }
-
-    // TO(0) is _NUMERIC's own way back to the base layer (see its home-row
-    // key) -- also the "current method" NUM_MO+NUM_OS's lock exits through.
-    if (keycode == TO(0) && record->event.pressed) {
-        num_locked   = false;
-        num_one_shot = false;
-        return true; // let QMK's own TO() handling still run
-    }
-
     // Resolve a held CW_CTL as Ctrl the moment any other key is pressed.
     if (cw_ctl_held && !cw_ctl_is_ctrl && keycode != CW_CTL && record->event.pressed) {
         register_code(KC_LCTL);

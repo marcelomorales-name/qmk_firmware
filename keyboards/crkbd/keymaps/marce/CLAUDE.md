@@ -6,7 +6,7 @@ Personal QMK keymap `keyboards/crkbd/keymaps/marce` (Corne, `crkbd/rev4_1/standa
 
 ## Files
 
-- `keymap.c` — layers (`keymaps[]`), Corne-only keycodes (`CW_CTL`, `NUM_MO`, `NUM_OS`), RGB layer color, OLED, encoders,
+- `keymap.c` — layers (`keymaps[]`), Corne-only keycodes (`CW_CTL`), RGB layer color, OLED, encoders,
   `process_record_marce_kb`, `matrix_scan_user` (CW_CTL timer).
 - `rules.mk`, `config.h` — Corne-only settings; shared ones come from `users/marce/`.
 - `gen_keymap_viz.py` -> `keymap-viz.html`, `flash.sh` (compile in the toolbox, copy .uf2 to the RPI-RP2 drive on the host).
@@ -21,9 +21,9 @@ Build: `qmk compile -kb crkbd/rev4_1/standard -km marce`. No tests; verify by bu
 | backslash on base top row | gone from base; on `_LOWER` home row |
 | dedicated Ctrl thumb key | Ctrl is a mod-tap on Z and `/` (and `CW_CTL` on `_LOWER`) |
 | 4 thumb keys/side | 3: Alt, LOWER, Space/Enter tap dance, RAISE, AltGr |
-| `NUM_LAYER` (tap one-shot / hold momentary) | `NUM_MO` + `NUM_OS` on the ex2 columns; both together lock `_NUMERIC` (exit with `TO(0)`) |
-| bottom-row innermost extra column | ex2 columns above the inner thumb keys: NUM_MO/NUM_OS (top), repeat/alt-repeat (home) |
-| `NUMGRID_*` F/G overlay on `_NUMERIC` | not ported yet (PLAN.md phase 4b); `_NUMERIC` is still a `KC_P*` numpad |
+| `NUM_LAYER` on a bottom-row key | same shared `NUM_LAYER` keycode, on the top-row left ex2 column (the right ex2 slot it used to share with `NUM_OS` is now free) |
+| bottom-row innermost extra column | ex2 columns above the inner thumb keys: NUM_LAYER (top, left only), repeat/alt-repeat (home) |
+| `NUMGRID_*` F/G overlay on `_NUMERIC` | ported (PLAN.md phase 4b): grid maps 1:1 onto the old `KC_P1..9` spots, F/G onto the home row's operator column (`KC_PAST` moved up to the top row) |
 | Z/X/Slash/Dot mod-taps | only Z and Slash are mod-taps |
 
 ## Invariants

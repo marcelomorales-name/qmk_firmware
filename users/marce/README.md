@@ -9,9 +9,9 @@ Migration history and rationale: `PLAN.md`.
 | Here (`users/marce/`) | In each `keymap.c` |
 |---|---|
 | `enum layers`, `LOWER`/`RAISE` (`marce.h`) | the `keymaps[]` arrays (the physical layouts differ: 58 vs 46 keys) |
-| shared keycodes: `ALTGR_MC`, `NUMGRID_*`, `NUM_GRD_F/G`, `DIG_*` | board-only keycodes, in an enum starting at `MARCE_SAFE_RANGE` |
+| shared keycodes: `ALTGR_MC`, `NUM_LAYER`, `NUMGRID_*`, `NUM_GRD_F/G`, `DIG_*` | board-only keycodes, in an enum starting at `MARCE_SAFE_RANGE` |
 | `process_record_user` dispatcher | `process_record_marce_kb` for the board-only keycodes |
-| Mac/PC AltGr + macOS Unicode input, digitizer grid, tri-layer logic, hold-vs-tap helpers | OLED, encoders, RGB matrix, `matrix_scan_user`, `keyboard_post_init_user` |
+| Mac/PC AltGr + macOS Unicode input, digitizer grid, numeric grid F/G overlay, tri-layer logic, hold-vs-tap helpers | OLED, encoders, RGB matrix, `matrix_scan_user`, `keyboard_post_init_user` |
 | `MARCE_TAP_DANCE_ACTIONS` macro | the `tap_dance_actions[]` table that expands it |
 | `config.h`, `rules.mk` for what both boards use | anything board-specific |
 
@@ -39,4 +39,5 @@ qmk compile -kb lily58/rev1 -km marce            # AVR, 28672 B limit
 qmk compile -kb crkbd/rev4_1/standard -km marce  # RP2040
 ```
 
-Baselines after the migration: lily58 18500 B, crkbd text 50908 B.
+Baselines after the migration: lily58 18500 B, crkbd text 50908 B. After phase 4b (NUMGRID F/G overlay shared,
+NUM_LAYER unified): lily58 18498 B, crkbd text 51012 B.

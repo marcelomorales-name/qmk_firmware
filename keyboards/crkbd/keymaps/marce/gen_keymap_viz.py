@@ -516,6 +516,10 @@ function labelFor(tok){
   if (m = tok.match(/^RCTL_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Ctrl", type:"dual" };
   if (m = tok.match(/^RSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
+  if (tok === "NUM_LAYER") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_GRD_F") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (tok === "NUM_GRD_G") return { main:"G", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
+  if (m = tok.match(/^NUMGRID_([0-9])$/)) return { main:m[1], sub:"F-grid", type:"numpad" };
   if (tok === "LOWER") return { main:"Lower", sub:"", type:"layer", hue:"var(--hue-lower)" };
   if (tok === "RAISE") return { main:"Raise", sub:"", type:"layer", hue:"var(--hue-raise)" };
   if (m = tok.match(/^TO\((\w+)\)$/)) {
