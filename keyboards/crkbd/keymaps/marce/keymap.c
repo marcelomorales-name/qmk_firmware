@@ -70,7 +70,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // now -- see NUM_LAYER in users/marce/marce.h; the right side's top-row
     // ex2 slot is free) and repeat/alt repeat (home row, closest to the
     // thumbs), no LOWER needed.
-    [_QWERTY] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, NUM_LAYER, KC_NO, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                    // top row
+    [_QWERTY] = LAYOUT_split_3x6_3_ex2(KC_TAB, LT(_NUMERIC, KC_Q), KC_W, KC_E, KC_R, KC_T, NUM_LAYER, KC_NO, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                    // top row
                                        LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT), // home row
                                        LSFT_T(KC_GRV), LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT,                      // bottom row
                                        KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT                                                                   // thumbs
@@ -109,6 +109,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                        KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO                                                                                 // thumbs
                                        ),
 
+    // Q on the base layer is LT(_NUMERIC, KC_Q): hold for _NUMERIC (also kept
+    // on Q there so the layer stays held), tap for Q. T on _NUMERIC is
+    // Ctrl+Shift+Gui when held, T when tapped (same as Lily58); the "/" that
+    // used to sit there is gone.
     // Numeric layer: the shared NUMGRID_1..9,0 grid on the right hand (number-
     // row digits, not real numpad keycodes, so host Num Lock doesn't matter),
     // arrows on the left, entered/exited via NUM_LAYER/TO(_NUMERIC)/TO(0)
@@ -136,7 +140,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // so no placement change there, just a different keycode. Every row's
     // first and last column is now either literally identical to the base
     // layer or KC_TRNS falling through to it, matching every other layer.
-    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(KC_TAB, KC_NO, KC_UP, KC_NO, KC_PAST, KC_PSLS, KC_NO, KC_NO, NUMGRID_7, NUMGRID_8, NUMGRID_9, KC_PPLS, KC_NO, KC_TRNS,             // top row
+    [_NUMERIC] = LAYOUT_split_3x6_3_ex2(KC_TAB, LT(_NUMERIC, KC_Q), KC_UP, KC_NO, KC_PAST, MT(MOD_LCTL | MOD_LSFT | MOD_LGUI, KC_T), KC_NO, KC_NO, NUMGRID_7, NUMGRID_8, NUMGRID_9, KC_PPLS, KC_NO, KC_TRNS,             // top row
                                         KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, NUM_GRD_F, NUM_GRD_G, TO(0), KC_NO, NUMGRID_4, NUMGRID_5, NUMGRID_6, KC_PMNS, KC_NO, KC_TRNS, // home row
                                         KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, NUMGRID_1, NUMGRID_2, NUMGRID_3, KC_PDOT, KC_RCTL, KC_RSFT,                     // bottom row
                                         KC_TRNS, LOWER, KC_SPC, KC_ENT, RAISE, NUMGRID_0                                                                                  // thumbs

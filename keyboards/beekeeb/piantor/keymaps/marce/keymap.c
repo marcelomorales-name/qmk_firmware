@@ -4,16 +4,15 @@
 // Ported from keyboards/crkbd/keymaps/marce. The Piantor is LAYOUT_split_3x6_3
 // (42 keys): the Corne's 46 minus the two "ex2" keys per side. Deliberate
 // changes made during the port:
-//   - NUM_LAYER (the shared tap-one-shot/hold-momentary _NUMERIC key) was on
-//     the Corne's top-row left ex2 key. It now replaces KC_RSFT, the base
-//     layer's bottom-right outer key; Shift stays available on the left
-//     (LSFT_T(KC_GRV)). _NUMERIC's own copy of that spot is TO(0), the exit
-//     key that used to sit on the home row's left ex2 key. TO(_NUMERIC) on
-//     _ADJUST is still there as a fallback way in.
+//   - NUM_LAYER (the Corne's top-row left ex2 key) is gone: _NUMERIC is
+//     entered by holding Q (LT(_NUMERIC, KC_Q), as on Lily58), and T on
+//     _NUMERIC is Ctrl+Shift+Gui when held. The bottom-right outer key is a
+//     plain KC_RSFT. _NUMERIC's copy of that spot is TO(0), an exit key for
+//     when _NUMERIC was entered via TO(_NUMERIC) on _ADJUST.
 //   - Repeat / alt repeat (home-row ex2 keys on the Corne) moved to _RAISE's
 //     two free right-hand top-row keys, next to PrtSc/Pause/Menu.
 //   - The bottom-right outer key is KC_NO (not KC_TRNS) on _LOWER/_RAISE/
-//     _ADJUST so it can't fall through to NUM_LAYER by accident.
+//     _ADJUST so Shift doesn't fall through there.
 //   - No encoders, RGB matrix or OLED on this board, so the Corne's code for
 //     those is dropped.
 // Everything else (rows, thumbs, _NUMERIC grid with the NUM_GRD_F/G overlay)
@@ -34,9 +33,9 @@ tap_dance_action_t tap_dance_actions[] = {MARCE_TAP_DANCE_ACTIONS};
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Base layer: QWERTY.
-    [_QWERTY] = LAYOUT_split_3x6_3(KC_TAB, KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                    // top row
+    [_QWERTY] = LAYOUT_split_3x6_3(KC_TAB, LT(_NUMERIC, KC_Q), KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSPC,                                    // top row
                                    LGUI_T(KC_ESC), KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, RGUI_T(KC_QUOT),                 // home row
-                                   LSFT_T(KC_GRV), LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), NUM_LAYER, // bottom row
+                                   LSFT_T(KC_GRV), LCTL_T(KC_Z), KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, RCTL_T(KC_SLSH), KC_RSFT, // bottom row
                                    KC_LALT, LOWER, LGUI_T(KC_SPC), TD(TAP_SPC_ENT), RAISE, KC_RALT                                                // thumbs
                                    ),
 
@@ -66,8 +65,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // row digits, not real numpad keycodes, so host Num Lock doesn't matter),
     // arrows on the left. NUM_GRD_F/NUM_GRD_G (hold -> retarget the grid to
     // F-keys, tap -> F/G) sit on the home row's operator column. TO(0) on the
-    // bottom-right outer key leaves the layer (that spot is NUM_LAYER on base).
-    [_NUMERIC] = LAYOUT_split_3x6_3(KC_TAB, KC_NO, KC_UP, KC_NO, KC_PAST, KC_PSLS, NUMGRID_7, NUMGRID_8, NUMGRID_9, KC_PPLS, KC_NO, KC_TRNS,   // top row
+    // bottom-right outer key leaves the layer (that spot is RSFT on base).
+    [_NUMERIC] = LAYOUT_split_3x6_3(KC_TAB, LT(_NUMERIC, KC_Q), KC_UP, KC_NO, KC_PAST, MT(MOD_LCTL | MOD_LSFT | MOD_LGUI, KC_T), NUMGRID_7, NUMGRID_8, NUMGRID_9, KC_PPLS, KC_NO, KC_TRNS,   // top row
                                     KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, NUM_GRD_F, NUM_GRD_G, NUMGRID_4, NUMGRID_5, NUMGRID_6, KC_PMNS, KC_NO, KC_TRNS, // home row
                                     KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, NUMGRID_1, NUMGRID_2, NUMGRID_3, KC_PDOT, KC_RCTL, TO(0),    // bottom row
                                     KC_TRNS, LOWER, KC_SPC, KC_ENT, RAISE, NUMGRID_0                                                                // thumbs
