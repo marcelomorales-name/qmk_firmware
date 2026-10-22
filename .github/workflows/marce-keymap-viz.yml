@@ -6,6 +6,7 @@ on:
     paths:
       - "keyboards/lily58/keymaps/marce/keymap-viz.html"
       - "keyboards/crkbd/keymaps/marce/keymap-viz.html"
+      - "keyboards/beekeeb/piantor/keymaps/marce/keymap-viz.html"
       - ".github/workflows/marce-keymap-viz.yml"
   workflow_dispatch:
 
@@ -29,9 +30,10 @@ jobs:
 
       - name: Assemble site
         run: |
-          mkdir -p _site/lily58 _site/corne
+          mkdir -p _site/lily58 _site/corne _site/piantor
           cp keyboards/lily58/keymaps/marce/keymap-viz.html _site/lily58/index.html
           cp keyboards/crkbd/keymaps/marce/keymap-viz.html _site/corne/index.html
+          cp keyboards/beekeeb/piantor/keymaps/marce/keymap-viz.html _site/piantor/index.html
           printf '%s\n' \
             '<!doctype html>' \
             '<meta charset="utf-8">' \
@@ -39,6 +41,7 @@ jobs:
             '<ul>' \
             '  <li><a href="lily58/">Lily58L marce keymap</a></li>' \
             '  <li><a href="corne/">Corne v4 marce keymap</a></li>' \
+            '  <li><a href="piantor/">Piantor marce keymap</a></li>' \
             '</ul>' \
             > _site/index.html
 
