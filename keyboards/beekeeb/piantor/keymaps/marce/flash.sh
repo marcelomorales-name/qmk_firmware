@@ -29,11 +29,25 @@ for arg in "$@"; do
 done
 
 if [ "$skip_compile" -eq 0 ]; then
-    echo "==> Compiling ${KEYBOARD}:${KEYMAP} in the ${TOOLBOX_CONTAINER} toolbox..."
-    toolbox run -c "$TOOLBOX_CONTAINER" bash -c "
-        cd '${REPO_ROOT}' &&
-        qmk compile -kb '${KEYBOARD}' -km '${KEYMAP}'
-    "
+    echo "==> Compiling ${KEYBOARD}:${KEYMAP}..."
+    if [ -e /run/.containerenv ] || [ -n "${container:-}" ]; then
+        # Already inside a toolbox: `toolbox run` from in here falls back to
+        # flatpak-spawn, which isn't installed. Compile directly instead.
+        (cd "$REPO_ROOT" && qmk compile -kb "$KEYBOARD" -km "$KEYMAP")
+    else
+        toolbox run -c "$TOOLBOX_CONTAINER" bash -c "
+            cd '${REPO_ROOT}' &&
+            qmk compile -kb '${KEYBOARD}' -km '${KEYMAP}'
+        "
+    fi
+fi
+
+# Flashing needs the host: the toolbox can't see the RPI-RP2 drive appear or
+# mount it. Compile from inside the toolbox if you like, then run
+# `./flash.sh --flash-only` from a host shell.
+if [ -e /run/.containerenv ] || [ -n "${container:-}" ]; then
+    echo "==> Compiled. Inside a toolbox, so run './flash.sh --flash-only' from a host shell to flash." >&2
+    exit 0
 fi
 
 if [ ! -f "$UF2_FILE" ]; then
