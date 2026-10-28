@@ -19,8 +19,8 @@ The Piantor is the Corne without its two "ex2" keys per side, so every row and t
 
 | Corne | Piantor |
 |---|---|
-| `NUM_LAYER` on the top-row left ex2 key | replaces `KC_RSFT` (base, bottom-right outer); `KC_NO` there on LOWER/RAISE/ADJUST |
-| `TO(0)` on the `_NUMERIC` home-row left ex2 key | `_NUMERIC` bottom-right outer (where `KC_RSFT` was) |
+| `NUM_LAYER` on the top-row left ex2 key | dropped; `_NUMERIC` is entered by holding `LT(_NUMERIC, KC_Q)` |
+| `TO(0)` on the `_NUMERIC` home-row left ex2 key | dropped |
 | repeat / alt repeat on the home-row ex2 keys (base) | `_RAISE` top row, right of `KC_APP` |
 | RGB layer colour, OLED, encoders | dropped (hardware absent) |
 

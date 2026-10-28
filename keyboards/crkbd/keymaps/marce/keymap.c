@@ -103,7 +103,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // reboot/bootloader keys here anymore; keyboard-power moved off the
     // outer column (onto the freed NO slot next to it) so that column can
     // stay transparent like every other layer.
-    [_ADJUST] = LAYOUT_split_3x6_3_ex2(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_KB_POWER, KC_TRNS, KC_TRNS, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
+    [_ADJUST] = LAYOUT_split_3x6_3_ex2(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, KC_NO, KC_KB_POWER, KC_TRNS, KC_TRNS, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
                                        KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, KC_TRNS, KC_TRNS, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_TRNS,          // home row
                                        KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_TRNS,                                   // bottom row
                                        KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO                                                                                 // thumbs
@@ -115,7 +115,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // used to sit there is gone.
     // Numeric layer: the shared NUMGRID_1..9,0 grid on the right hand (number-
     // row digits, not real numpad keycodes, so host Num Lock doesn't matter),
-    // arrows on the left, entered/exited via NUM_LAYER/TO(_NUMERIC)/TO(0)
+    // arrows on the left, entered/exited via NUM_LAYER/TO(0)
     // (TO(0) sits on the home row's left ex2 key, one step in from TAB's
     // top-left corner, so the outer columns can stay identical to every
     // other layer). NUM_GRD_F/NUM_GRD_G (hold -> retarget the grid to F-keys,

@@ -6,13 +6,10 @@
 // changes made during the port:
 //   - NUM_LAYER (the Corne's top-row left ex2 key) is gone: _NUMERIC is
 //     entered by holding Q (LT(_NUMERIC, KC_Q), as on Lily58), and T on
-//     _NUMERIC is Ctrl+Shift+Gui when held. The bottom-right outer key is a
-//     plain KC_RSFT. _NUMERIC's copy of that spot is TO(0), an exit key for
-//     when _NUMERIC was entered via TO(_NUMERIC) on _ADJUST.
+//     _NUMERIC is Ctrl+Shift+Gui when held. The bottom-right outer key is
+//     KC_RSFT on base and _NUMERIC, KC_TRNS elsewhere, as on the Corne.
 //   - Repeat / alt repeat (home-row ex2 keys on the Corne) moved to _RAISE's
 //     two free right-hand top-row keys, next to PrtSc/Pause/Menu.
-//   - The bottom-right outer key is KC_NO (not KC_TRNS) on _LOWER/_RAISE/
-//     _ADJUST so Shift doesn't fall through there.
 //   - No encoders, RGB matrix or OLED on this board, so the Corne's code for
 //     those is dropped.
 // Everything else (rows, thumbs, _NUMERIC grid with the NUM_GRD_F/G overlay)
@@ -42,33 +39,33 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Lower layer: numbers-less symbols and mouse keys (held via LOWER).
     [_LOWER] = LAYOUT_split_3x6_3(KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_MINS, KC_EQL, KC_GRV, KC_LBRC, KC_RBRC, KC_TRNS, // top row
                                   KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, MS_LEFT, MS_DOWN, MS_UP, MS_RGHT, KC_BSLS, KC_TRNS, // home row
-                                  KC_TRNS, CW_CTL, KC_NO, MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_NO, // bottom row
+                                  KC_TRNS, CW_CTL, KC_NO, MS_BTN2, MS_BTN3, MS_BTN1, MS_WHLL, MS_WHLD, MS_WHLU, MS_WHLR, KC_NO, KC_TRNS, // bottom row
                                   KC_TRNS, KC_TRNS, KC_SPC, KC_ENT, KC_TRNS, KC_TRNS                                              // thumbs
                                   ),
 
     // Raise layer: function keys, navigation (held via RAISE).
     [_RAISE] = LAYOUT_split_3x6_3(KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_PSCR, KC_PAUS, KC_APP, QK_REPEAT_KEY, QK_ALT_REPEAT_KEY, KC_TRNS, // top row
                                   KC_TRNS, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_INS, KC_TRNS,                 // home row
-                                  KC_TRNS, LCTL_T(KC_F11), KC_F12, KC_F13, KC_F14, KC_F15, KC_HOME, KC_END, KC_PGUP, KC_PGDN, LCTL_T(KC_DEL), KC_NO, // bottom row
+                                  KC_TRNS, LCTL_T(KC_F11), KC_F12, KC_F13, KC_F14, KC_F15, KC_HOME, KC_END, KC_PGUP, KC_PGDN, LCTL_T(KC_DEL), KC_TRNS, // bottom row
                                   KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_TRNS                                                                // thumbs
                                   ),
 
     // Adjust layer: media keys (LOWER+RAISE). Right half hosts the
     // digitizer point grid, one physical row per grid row.
-    [_ADJUST] = LAYOUT_split_3x6_3(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, TO(_NUMERIC), KC_KB_POWER, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
+    [_ADJUST] = LAYOUT_split_3x6_3(KC_TRNS, KC_NO, ALTGR_MC, KC_NO, KC_NO, KC_KB_POWER, DIG_TL, DIG_TC, DIG_TR, KC_NO, KC_NO, KC_TRNS, // top row
                                    KC_TRNS, KC_PAUS, KC_SCRL, KC_NUM, KC_CAPS, KC_NO, DIG_ML, DIG_MC, DIG_MR, KC_NO, KC_NO, KC_TRNS,           // home row
-                                   KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_NO,                    // bottom row
+                                   KC_TRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, DIG_BL, DIG_BC, DIG_BR, KC_NO, KC_NO, KC_TRNS,                  // bottom row
                                    KC_NO, KC_TRNS, KC_NO, KC_NO, KC_TRNS, KC_NO                                                                // thumbs
                                    ),
 
     // Numeric layer: the shared NUMGRID_1..9,0 grid on the right hand (number-
     // row digits, not real numpad keycodes, so host Num Lock doesn't matter),
     // arrows on the left. NUM_GRD_F/NUM_GRD_G (hold -> retarget the grid to
-    // F-keys, tap -> F/G) sit on the home row's operator column. TO(0) on the
-    // bottom-right outer key leaves the layer (that spot is RSFT on base).
+    // F-keys, tap -> F/G) sit on the home row's operator column. The
+    // bottom-right outer key is KC_RSFT, as on the Corne.
     [_NUMERIC] = LAYOUT_split_3x6_3(KC_TAB, LT(_NUMERIC, KC_Q), KC_UP, KC_NO, KC_PAST, MT(MOD_LCTL | MOD_LSFT | MOD_LGUI, KC_T), NUMGRID_7, NUMGRID_8, NUMGRID_9, KC_PPLS, KC_NO, KC_TRNS,   // top row
                                     KC_TRNS, KC_LEFT, KC_DOWN, KC_RGHT, NUM_GRD_F, NUM_GRD_G, NUMGRID_4, NUMGRID_5, NUMGRID_6, KC_PMNS, KC_NO, KC_TRNS, // home row
-                                    KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, NUMGRID_1, NUMGRID_2, NUMGRID_3, KC_PDOT, KC_RCTL, TO(0),    // bottom row
+                                    KC_TRNS, KC_LCTL, KC_LALT, KC_NO, KC_NO, KC_PEQL, NUMGRID_1, NUMGRID_2, NUMGRID_3, KC_PDOT, KC_RCTL, KC_RSFT,  // bottom row
                                     KC_TRNS, LOWER, KC_SPC, KC_ENT, RAISE, NUMGRID_0                                                                // thumbs
                                     ),
 };

@@ -178,7 +178,12 @@ def main() -> None:
     render(args.keymap_c, args.keyboard_json, args.layout_name, args.out)
 
 
-TEMPLATE = r"""<title>Piantor Marce Layout</title>
+TEMPLATE = r"""<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Piantor Marce Layout</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 
 <style>
@@ -264,6 +269,9 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
     color:var(--ink);
     font-family:'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     min-height:100vh;
+    background-image:radial-gradient(60rem 28rem at 50% -8rem, color-mix(in srgb, var(--panel-hue, var(--accent)) 14%, transparent), transparent);
+    background-repeat:no-repeat;
+    -webkit-font-smoothing:antialiased;
   }
   .wrap{
     max-width:1120px;
@@ -290,7 +298,7 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
     line-height:.95;
   }
   h1 span{color:var(--accent);}
-  .sub{
+  .lede{
     font-size:.9rem;
     color:var(--ink-dim);
     max-width:38ch;
@@ -316,14 +324,18 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
     font-weight:500;
     letter-spacing:.03em;
     padding:.5rem .9rem;
-    border-radius:7px;
+    border-radius:999px;
     border:1px solid var(--line);
     background:var(--surface);
     color:var(--ink-dim);
     cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:.1rem;
     transition:background .15s ease, color .15s ease, border-color .15s ease, transform .1s ease;
   }
-  .tab:hover{transform:translateY(-1px);}
+  .tab:hover{transform:translateY(-1px); color:var(--ink); border-color:var(--tab-hue, var(--accent));}
+  .tab[data-active="true"]{box-shadow:0 4px 14px -4px var(--tab-hue, var(--accent));}
   .tab:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .tab .n{color:var(--ink-faint); margin-right:.4em;}
   .tab[data-active="true"]{
@@ -336,8 +348,10 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
   .panel{
     background:var(--surface);
     border:1px solid var(--line);
-    border-radius:14px;
+    border-radius:16px;
     padding:1.75rem 1.5rem 1.5rem;
+    border-top:3px solid var(--panel-hue, var(--accent));
+    box-shadow:0 18px 40px -28px rgba(0,0,0,.55);
   }
   .panel-head{
     display:flex;
@@ -362,16 +376,23 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
     line-height:1.5;
   }
 
-  .board-scroll{overflow-x:auto; padding-bottom:.25rem;}
+  .board-scroll{padding:.5rem 0 .25rem;}
   .board{
     position:relative;
-    margin:.5rem auto 0;
+    margin:0 auto;
+    transform-origin:top left;
+    flex:none;
   }
+  .board.swap .key{animation:pop .22s ease both; animation-delay:calc(var(--i) * 4ms);}
+  @keyframes pop{from{opacity:0; transform:translateY(4px) scale(.96);}}
+  @media (prefers-reduced-motion: reduce){.board.swap .key{animation:none;} .tab{transition:none;}}
   .key{
     position:absolute;
-    border-radius:8px;
+    border-radius:9px;
     border:1px solid var(--line);
     background:var(--key);
+    box-shadow:0 2px 0 var(--line), 0 6px 10px -6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -381,8 +402,11 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
     padding:2px;
     font-family:'IBM Plex Mono', monospace;
   }
-  .key .main{font-size:.76rem; font-weight:500; color:var(--ink);}
-  .key .sub{font-size:.56rem; color:var(--ink-dim); margin-top:1px;}
+  .key:hover{transform:translateY(-2px); border-color:var(--ink-faint); z-index:1; box-shadow:0 4px 0 var(--line), 0 10px 14px -8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07);}
+  .key.t-empty,.key.t-trans{box-shadow:none;}
+  .key.t-empty:hover,.key.t-trans:hover{transform:none; box-shadow:none;}
+  .key .main{font-size:.82rem; font-weight:500; color:var(--ink);}
+  .key .sub{font-size:.58rem; color:var(--ink-dim); margin-top:1px;}
 
   .key.t-empty{background:transparent; border-color:var(--line-soft); border-style:dashed;}
   .key.t-trans{background:var(--key-alt); border-style:dashed; border-color:var(--line);}
@@ -436,6 +460,14 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
   .note p{margin:0; font-size:.85rem; line-height:1.55; color:var(--ink-dim);}
   .note code{font-family:'IBM Plex Mono', monospace; font-size:.82em; color:var(--ink);}
 
+  .hint{margin:.9rem 0 0; font-size:.72rem; color:var(--ink-faint); font-family:'IBM Plex Mono', monospace;}
+  kbd{font-family:inherit; font-size:.95em; padding:.05em .4em; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; background:var(--key-alt); color:var(--ink-dim);}
+  @media (max-width:600px){
+    .wrap{padding:1.5rem 1rem 3rem;}
+    .panel{padding:1.25rem .75rem 1rem;}
+    .path,.hint{display:none;}
+  }
+
   footer{
     margin-top:2.5rem;
     font-size:.72rem;
@@ -448,12 +480,12 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
   <header>
     <div>
       <h1>Piantor &middot; marce keymap</h1>
-      <p class="sub">Five layers, one 42&#8209;key split &mdash; rendered straight from the firmware source, key positions pulled from the board's own <code>keyboard.json</code>.</p>
+      <p class="lede">Five layers, one 42&#8209;key split &mdash; rendered straight from the firmware source, key positions pulled from the board's own <code>keyboard.json</code>.</p>
     </div>
     <div class="path">keyboards/beekeeb/piantor/keymaps/marce/keymap.c</div>
   </header>
 
-  <nav class="tabs" id="tabs"></nav>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Layers"></nav>
 
   <section class="panel">
     <div class="panel-head">
@@ -474,6 +506,8 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
     </div>
   </section>
 
+  <p class="hint"><kbd>1</kbd>&ndash;<kbd>5</kbd> or <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to switch layers</p>
+
   <div class="notes">
     <div class="note">
       <h3>Tri&#8209;layer stack</h3>
@@ -493,7 +527,7 @@ TEMPLATE = r"""<title>Piantor Marce Layout</title>
 </div>
 
 <script>
-const UNIT = 54;
+const UNIT = 62;
 
 const POSITIONS = __POSITIONS__;
 
@@ -515,6 +549,10 @@ function labelFor(tok){
   if (m = tok.match(/^RGUI_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Gui", type:"dual" };
   if (m = tok.match(/^RCTL_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Ctrl", type:"dual" };
   if (m = tok.match(/^RSFT_T\((.+)\)$/)) return { main:kc(m[1]), sub:"Shift", type:"dual" };
+  if (m = tok.match(/^LT\((\w+),\s*(.+)\)$/)) {
+    const t = m[1].replace(/^_/,"").toLowerCase().replace(/^./,c=>c.toUpperCase());
+    return { main:kc(m[2]), sub:"hold → "+t, type:"dual", hue:"var(--hue-"+t.toLowerCase()+")" };
+  }
   if (tok === "TD(TAP_SPC_ENT)") return { main:"Space", sub:"→ Enter", type:"dual" };
   if (tok === "NUM_LAYER") return { main:"Numeric", sub:"tap · hold", type:"dual", hue:"var(--hue-numeric)" };
   if (tok === "NUM_GRD_F") return { main:"F", sub:"hold → Grid", type:"dual", hue:"var(--hue-numeric)" };
@@ -593,6 +631,7 @@ function buildTabs(){
     const meta = LAYER_META[key];
     const b = document.createElement("button");
     b.className = "tab";
+    b.setAttribute("role", "tab");
     b.dataset.active = (key === active);
     b.style.setProperty("--tab-hue", meta.hue || "var(--accent)");
     b.innerHTML = '<span class="n">0'+meta.n+'</span>'+meta.label;
@@ -610,9 +649,11 @@ function render(){
   document.getElementById("panel-title").textContent = meta.label;
   document.getElementById("panel-title").style.color = meta.hue || "var(--ink)";
   document.getElementById("panel-desc").textContent = meta.desc;
+  document.documentElement.style.setProperty("--panel-hue", meta.hue || "var(--accent)");
 
   const board = document.getElementById("board");
   board.innerHTML = "";
+  board.classList.remove("swap"); void board.offsetWidth; board.classList.add("swap");
   let maxX = 0, maxY = 0;
   const toks = LAYERS[active];
   POSITIONS.forEach((pos, i) => {
@@ -624,6 +665,7 @@ function render(){
     div.className = "key t-" + info.type;
     if (info.hue) div.style.setProperty("--layer-hue", info.hue);
     else if (info.type === "layer") div.style.setProperty("--layer-hue", meta.hue || "var(--accent)");
+    div.style.setProperty("--i", i);
     div.style.left = (x*UNIT) + "px";
     div.style.top = (y*UNIT) + "px";
     div.style.width = (w*UNIT - 6) + "px";
@@ -633,7 +675,34 @@ function render(){
   });
   board.style.width = (maxX*UNIT) + "px";
   board.style.height = (maxY*UNIT) + "px";
+  fit();
 }
+
+// Scale the board down to the panel width instead of scrolling sideways.
+function fit(){
+  const board = document.getElementById("board");
+  const box = board.parentElement;
+  const w = parseFloat(board.style.width), h = parseFloat(board.style.height);
+  const k = Math.min(1, box.clientWidth / w);
+  board.style.transform = "scale(" + k + ")";
+  box.style.height = (h * k + 12) + "px";
+  box.style.display = "flex";
+  box.style.justifyContent = k < 1 ? "flex-start" : "center";
+}
+window.addEventListener("resize", fit);
+
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const keys = Object.keys(LAYER_META);
+  let i = keys.indexOf(active);
+  if (/^[1-9]$/.test(e.key) && +e.key <= keys.length) i = +e.key - 1;
+  else if (e.key === "ArrowRight") i = (i + 1) % keys.length;
+  else if (e.key === "ArrowLeft") i = (i - 1 + keys.length) % keys.length;
+  else return;
+  active = keys[i];
+  try{localStorage.setItem("piantor-active-layer", active);}catch(e){}
+  render();
+});
 
 buildTabs();
 render();
